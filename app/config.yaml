@@ -31,7 +31,7 @@ provenanceSpec:
   corpus: "SBLGNT"
   doi: 10.5281/zenodo.5826257
   version: 2022
-  webUrl: "https://bibleol.3bmoodle.dk/text/show_text/nestle1904/<1>/<2>/<3>"
+  # Intentionally no webUrl: the inherited link resolves Nestle1904, not SBLGNT.
 docs:
   charText: 'Greek characters transcription'
   charUrl: '{docBase}/features{docExt}'

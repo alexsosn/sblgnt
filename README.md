@@ -1,5 +1,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5807152.svg)](https://doi.org/10.5281/zenodo.5807152) [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 # SBLGNT
+
+> **Maintenance fork** of [CenterBLC/SBLGNT](https://github.com/CenterBLC/SBLGNT). The historical `tf/2022` dataset is currently unchanged and has not yet been rebuilt or certified against newer Greek editions. See [maintenance research](docs/MAINTENANCE.md) and [backlog](BACKLOG.md). This fork keeps independent upstream/source licensing obligations.
 This repository contains the SBL Greek New Testament (SBLGNT) in a TextFabric format. As a source for the CBLC version of SBLGNT we have used the version from MorphGNT as it is made available in their repository "sblgnt" (https://github.com/morphgnt/sblgnt). We have then converted the txt files into the TextFabric format (see https://github.com/CenterBLC/SBLGNT/tree/main/programs). This allows TF users to access the SBLGNT text in a convenient way and query it.
 
 # Added Features
@@ -14,8 +16,8 @@ Text-Fabric has proven to be an excellent linguistic research tool as it can use
 
 # How to get started?
 Run in a jupyter notebook the following command:
-```phython
+```python
 from tf.fabric import Fabric
 from tf.app import use
-NA = use("CenterBLC/SBLGNT", version="2022")
+GNT = use("alexsosn/sblgnt", version="2022")
 ```
