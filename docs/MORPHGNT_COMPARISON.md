@@ -14,7 +14,7 @@ git -C upstream-morphgnt checkout aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d
 python -m pip install text-fabric==13.1.0
 python -m scripts.compare_morphgnt \
   --tf-dir tf/2022 --source-dir upstream-morphgnt \
-  --allow-differences --report morphgnt-comparison.json
+  --report morphgnt-comparison.json
 \`\`\`
 
 The \`--allow-differences\` flag is **temporary for research only**. CI must still validate the exact pin, parse, and native TF load. After reviewing the first real comparison, replace it with explicit verified difference expectations/edition policy or strict exact matching before publishing any rebuilt TF corpus.
