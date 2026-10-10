@@ -81,6 +81,10 @@ def audit_rows(
     for book in expected_books:
         if counts[book] == 0:
             fail(f"missing book {book}")
+        for expected_chapter, actual_chapter in enumerate(sorted(chapters[book]), start=1):
+            if actual_chapter != expected_chapter:
+                fail(f"missing chapter {book}:{expected_chapter} (next actual: {actual_chapter})")
+                break
     if next_word != word_count + 1:
         fail(f"word partition ends at {next_word-1}, expected {word_count}")
     return {
@@ -105,22 +109,25 @@ def audit_live(tf_dir: Path, *, enforce_2022_baseline: bool = True) -> dict:
 
     rows: list[VerseRow] = []
     reverse_lookup_errors: list[str] = []
+    reverse_lookup_total = 0
     for node in api.F.otype.s("verse"):
         section = api.T.sectionFromNode(node)
         if not section or len(section) != 3:
             raise RuntimeError(f"missing full book/chapter/verse section for node {node}")
         book, chapter, verse = section
         key = (str(book), int(chapter), int(verse))
-        if api.T.nodeFromSection(key) != node and len(reverse_lookup_errors) < MAX_ERRORS:
-            reverse_lookup_errors.append(f"reverse section lookup failed at node {node}: {key}")
+        if api.T.nodeFromSection(key) != node:
+            reverse_lookup_total += 1
+            if len(reverse_lookup_errors) < MAX_ERRORS:
+                reverse_lookup_errors.append(f"reverse section lookup failed at node {node}: {key}")
         rows.append(VerseRow(node, *key, tuple(api.L.d(node, otype="word"))))
 
     counts = {otype: len(api.F.otype.s(otype)) for otype in BASELINE}
     result = audit_rows(rows, word_count=api.F.otype.maxSlot)
     result["node_counts"] = counts
     result["source"] = "local native Text-Fabric; no edition comparison"
+    result["error_count"] += reverse_lookup_total
     for message in reverse_lookup_errors:
-        result["error_count"] += 1
         if len(result["errors"]) < MAX_ERRORS:
             result["errors"].append(message)
     if enforce_2022_baseline:
