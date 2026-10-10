@@ -1,0 +1,30 @@
+name: Verify legacy SBLGNT Text-Fabric
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run RED-first integrity regressions
+        run: python -m unittest discover -s tests -v
+      - name: Install same supported Text-Fabric version as CopticScriptorium-TF
+        run: python -m pip install text-fabric==13.1.0
+      - name: Audit native TF against pinned 2022 inventory
+        run: python scripts/audit_tf.py --tf-dir tf/2022 --report "$RUNNER_TEMP/tf-audit.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tf-audit
+          path: ${{ runner.temp }}/tf-audit.json
+          if-no-files-found: ignore
