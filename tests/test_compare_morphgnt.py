@@ -45,8 +45,15 @@ class SourceInventoryTests(unittest.TestCase):
                 verify_source_checkout(Path("/tmp/upstream"))
 
     def test_accepts_verified_exact_source_revision(self):
-        with patch("subprocess.check_output", return_value=(MORPHGNT_COMMIT + "\n").encode()):
+        with patch("subprocess.check_output", side_effect=[(MORPHGNT_COMMIT + "\n").encode(), b""]):
             self.assertEqual(verify_source_checkout(Path("/tmp/upstream")), MORPHGNT_COMMIT)
+
+    def test_refuses_dirty_checkout_with_same_head(self):
+        with patch("subprocess.check_output", side_effect=[
+            (MORPHGNT_COMMIT + "\n").encode(), b" M 64-Jn-morphgnt.txt\n"
+        ]):
+            with self.assertRaisesRegex(ValueError, "dirty source checkout"):
+                verify_source_checkout(Path("/tmp/upstream"))
 
     def test_reports_missing_excess_and_token_mismatches_without_text(self):
         source = Counter({("Matthew", 1, 1): 2, ("Matthew", 1, 2): 3, ("Mark", 1, 1): 1})
