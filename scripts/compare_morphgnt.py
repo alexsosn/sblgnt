@@ -28,6 +28,16 @@ def verify_source_checkout(root: Path) -> str:
         raise ValueError("source directory is not a verifiable Git checkout") from exc
     if head != MORPHGNT_COMMIT:
         raise ValueError(f"source commit mismatch: expected {MORPHGNT_COMMIT}, got {head}")
+    try:
+        status = subprocess.check_output(
+            ["git", "-C", str(root.resolve()), "status", "--porcelain",
+             "--untracked-files=all", "--", "*-morphgnt.txt"],
+            stderr=subprocess.DEVNULL, timeout=15,
+        ).decode("utf-8").strip()
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        raise ValueError("could not inspect MorphGNT checkout cleanliness") from exc
+    if status:
+        raise ValueError("dirty source checkout: tracked or untracked MorphGNT input differs from pinned HEAD")
     return head
 
 
