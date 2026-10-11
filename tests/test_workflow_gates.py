@@ -24,6 +24,7 @@ REQUIRED = (
     # New code's full source/TF coverage must remain non-optional.
     "python -m scripts.feature_provenance",
     "python -m scripts.compare_faithlife_refs",
+    "python -m scripts.compare_faithlife_text",
     "python -m scripts.build_base_tf",
     "python -m scripts.build_faithlife_text_tf",
     "python -m scripts.audit_faithlife_text_tf",
@@ -74,6 +75,7 @@ class WorkflowGatesTests(unittest.TestCase):
             "legacy-2024-lexical-parity.json",
             "faithlife-v12-reference-diff.json",
             "faithlife-text-tf-audit.json",
+            "faithlife-v12-text-diff.json",
             "base-structure-audit.json",
             "base-all-fields-audit.json",
             "base-derived-morphology-audit.json",
