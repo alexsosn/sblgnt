@@ -6,9 +6,12 @@ The generated dataset is local output: redistribution needs source-license revie
 from __future__ import annotations
 
 import argparse
+import ctypes
+import errno
 from dataclasses import dataclass
 import json
 import os
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -78,6 +81,42 @@ def validate_destination(source: Path, output: Path) -> None:
         raise ValueError(f"output already exists: {output}")
     if target == source_path or source_path in target.parents:
         raise ValueError("output must not be within source checkout")
+
+
+def publish_directory_no_replace(stage: Path, output: Path) -> None:
+    """Atomically publish a complete TF directory without replacing any target.
+
+    Linux uses renameat2(RENAME_NOREPLACE); Windows rename rejects existing
+    directory targets; Darwin renamex_np(RENAME_EXCL) has equivalent behavior.
+    Other platforms fail closed rather than silently permit overwrite.
+    """
+    if sys.platform.startswith("linux"):
+        libc = ctypes.CDLL(None, use_errno=True)
+        rename = getattr(libc, "renameat2", None)
+        if rename is None:
+            raise RuntimeError("atomic no-replace directory publishing requires Linux renameat2")
+        rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int,
+                           ctypes.c_char_p, ctypes.c_uint]
+        rename.restype = ctypes.c_int
+        result = rename(-100, os.fsencode(stage), -100, os.fsencode(output), 1)
+        if result != 0:
+            error = ctypes.get_errno()
+            raise OSError(error, os.strerror(error), str(output))
+    elif sys.platform == "darwin":
+        libc = ctypes.CDLL(None, use_errno=True)
+        rename = getattr(libc, "renamex_np", None)
+        if rename is None:
+            raise RuntimeError("atomic no-replace directory publishing requires renamex_np")
+        rename.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+        rename.restype = ctypes.c_int
+        if rename(os.fsencode(stage), os.fsencode(output), 0x00000004) != 0:
+            error = ctypes.get_errno()
+            raise OSError(error, os.strerror(error), str(output))
+    elif os.name == "nt":
+        # Windows os.rename raises FileExistsError instead of overwriting.
+        os.rename(stage, output)
+    else:
+        raise RuntimeError("atomic no-replace directory publication unsupported on this OS")
 
 
 def build_base_tf(source: Path, output: Path, *, source_commit: str) -> dict:
@@ -193,7 +232,7 @@ def build_base_tf(source: Path, output: Path, *, source_commit: str) -> dict:
         if not ok:
             raise RuntimeError("Text-Fabric converter rejected source")
         # A source defect should not publish a plausible-looking partial corpus.
-        os.replace(stage, output)
+        publish_directory_no_replace(stage, output)
     return {**counts, "source_revision": source_commit, "status": "built_source_base_only"}
 
 
