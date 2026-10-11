@@ -69,7 +69,7 @@ class MorphGNTDecoderTests(unittest.TestCase):
 
     def test_each_parsing_position_is_independent(self):
         # A case 'A' must not be interpreted as aorist, nor tense 'A' as accusative.
-        self.assertEqual(decode_source_morphology("V-", "3AIPASMC"), {
+        self.assertEqual(decode_source_morphology("V-", "3AAPASMC"), {
             "morph_pos": "verb", "morph_person": "third", "morph_tense": "aorist",
             "morph_voice": "active", "morph_mood": "participle",
             "morph_case": "accusative", "morph_number": "singular",
