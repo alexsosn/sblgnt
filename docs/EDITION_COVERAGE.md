@@ -52,7 +52,7 @@ It requires the same immutable Git source revisions and exact book/verse-set
 gate as the preceding reference audit.
 
 The diagnostic distinguishes exact matching, Unicode normalization,
-whitespace, the attested U+2019-vs-U+02BC apostrophe-glyph difference,\nlimited editorial sigla, punctuation, and remaining
+whitespace, the attested U+2019-vs-U+02BC apostrophe-glyph difference,\nlimited editorial sigla, punctuation, verse-initial capitalization, and remaining
 **textual-or-orthographic** differences. The categories are ordered\nnormalization stages: editorial/punctuation categories can include previously\nnormalized apostrophe glyphs. The last category is not a claim
 that a specific textual-critical variant has been established. MorphGNT
 source records do not encode arbitrary original interword whitespace, while
@@ -76,3 +76,33 @@ python -m scripts.compare_faithlife_text \
 
 Official XML presentation and critical apparatus fidelity are separately
 tracked in #12 and #13.
+
+### Independent complete-source result (2026-10-11)
+
+A separate implementation read all 27 real MorphGNT source blobs and all
+27 Faithlife plaintext files at the pinned revisions. The sources have
+137,554 MorphGNT tokens, 7,927 shared verse identities, and exactly
+12 additional Faithlife verse identities at John 7:53–8:11.
+
+The following mutually exclusive categories are ordered normalization stages:
+
+| Comparison stage | Shared verses |
+| --- | ---: |
+| Exact text | 6,804 |
+| Unicode NFC only | 18 |
+| Whitespace only | 0 |
+| Apostrophe glyph U+2019 versus U+02BC | 1,087 |
+| Editorial sigla (cumulative) | 6 |
+| Punctuation (cumulative) | 10 |
+| Verse-initial capitalization (cumulative) | 2 |
+| Remaining differences | **0** |
+
+The last two differences, Matthew 27:24 and Titus 3:13, concern only
+the first Greek letter's case. The classifier must preserve all other
+characters and must not globally case-fold the text. The apostrophe
+normalization maps **only** the pair attested in the sources, rather
+than generalizing across apostrophes and other Greek orthographic marks.
+
+These counts are edition-specific and dependent on the explicitly ordered
+normalizations. They do not establish token alignment or morphology for
+the twelve John verses absent from MorphGNT.
