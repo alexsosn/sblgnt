@@ -1,0 +1,47 @@
+name: Audit pinned MorphGNT token identity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lexical-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout last pre-correction source revision
+        uses: actions/checkout@v4
+        with:
+          repository: morphgnt/sblgnt
+          ref: 8b11a5be0a5cdad16c82e3d029e79ad0b0b9e4b4
+          path: upstream-morphgnt-legacy
+          persist-credentials: false
+      - name: Checkout exact source revision
+        uses: actions/checkout@v4
+        with:
+          repository: morphgnt/sblgnt
+          ref: aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d
+          path: upstream-morphgnt
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test identity audit counterexamples
+        run: python -m unittest discover -s tests -v
+      - name: Install pinned Text-Fabric
+        run: python -m pip install text-fabric==13.1.0
+      - name: Verify strict legacy source versus 2022 TF lexical identity
+        run: python -m scripts.compare_tokens --tf-dir tf/2022 --source-dir upstream-morphgnt-legacy --source-commit 8b11a5be0a5cdad16c82e3d029e79ad0b0b9e4b4 --report "$RUNNER_TEMP/morphgnt-legacy-parity.json"
+      - name: Verify exactly the 18 upstream 2024 accent corrections
+        run: python -m scripts.compare_tokens --tf-dir tf/2022 --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --expect-2024-accent-corrections --report "$RUNNER_TEMP/morphgnt-2024-parity.json"
+      - name: Preserve evidence without copyrighted Greek text
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: morphgnt-token-parity
+          path: ${{ runner.temp }}/morphgnt-*-parity.json
+          if-no-files-found: ignore
