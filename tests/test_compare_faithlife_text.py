@@ -43,6 +43,9 @@ class SourceTextTests(unittest.TestCase):
             path.write_text("ΚΑΤΑ ΜΑΡΚΟΝ\nMark 1:2\tα\nMark 1:1\tβ\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "order"):
                 list(faithlife_verse_texts(Path(folder), book_files={"Mark": "Mark"}))
+            path.write_text("ΚΑΤΑ ΜΑΡΚΟΝ\nMark 1:1\tα\tβ\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "extra tab"):
+                list(faithlife_verse_texts(Path(folder), book_files={"Mark": "Mark"}))
             path.write_text("ΚΑΤΑ ΜΑΡΚΟΝ\nMark 1:1 α\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "malformed"):
                 list(faithlife_verse_texts(Path(folder), book_files={"Mark": "Mark"}))
@@ -79,6 +82,7 @@ class SourceTextTests(unittest.TestCase):
         self.assertEqual(report["categories"]["textual_or_orthographic_difference"], 1)
         self.assertEqual(report["categories"]["exact"], 1)
         self.assertEqual(report["by_book"]["Mark"]["textual_or_orthographic_difference"], 1)
+        self.assertEqual(report["examples_by_book"]["Mark"][0]["reference"], "Mark 1:1")
         serialized = json.dumps(report, ensure_ascii=False)
         for content in ("χριστοῦ", "λόγος", "θεός", "ἀρχή"):
             self.assertNotIn(content, serialized)
