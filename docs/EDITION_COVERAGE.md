@@ -52,8 +52,11 @@ It requires the same immutable Git source revisions and exact book/verse-set
 gate as the preceding reference audit.
 
 The diagnostic distinguishes exact matching, Unicode normalization,
-whitespace, the attested U+2019-vs-U+02BC apostrophe-glyph difference,\nlimited editorial sigla, punctuation, verse-initial capitalization, and remaining
-**textual-or-orthographic** differences. The categories are ordered\nnormalization stages: editorial/punctuation categories can include previously\nnormalized apostrophe glyphs. The last category is not a claim
+whitespace, the attested U+2019-vs-U+02BC apostrophe-glyph difference,
+limited editorial sigla, punctuation, verse-initial capitalization, and remaining
+**textual-or-orthographic** differences. The categories are ordered
+normalization stages: editorial/punctuation categories can include previously
+normalized apostrophe glyphs. The last category is not a claim
 that a specific textual-critical variant has been established. MorphGNT
 source records do not encode arbitrary original interword whitespace, while
 Faithlife verse lines include final ASCII padding. Only Faithlife trailing
