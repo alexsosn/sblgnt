@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from scripts.build_base_tf import SourceWord, iter_source_words, validate_destination
+from scripts.build_base_tf import SourceWord, iter_source_words, validate_destination, publish_directory_no_replace
 
 
 class SourceParserTests(unittest.TestCase):
@@ -71,6 +71,41 @@ class SourceParserTests(unittest.TestCase):
             root = Path(directory)
             with self.assertRaisesRegex(ValueError, "within source"):
                 validate_destination(root, root / "generated" / "tf")
+
+    def test_publish_finished_directory_without_overwrite(self):
+        with TemporaryDirectory() as directory:
+            base = Path(directory)
+            stage = base / "stage"
+            stage.mkdir()
+            (stage / "otype.tf").write_text("complete", encoding="utf-8")
+            target = base / "tf"
+            publish_directory_no_replace(stage, target)
+            self.assertFalse(stage.exists())
+            self.assertEqual((target / "otype.tf").read_text(encoding="utf-8"), "complete")
+
+    def test_concurrent_empty_directory_is_not_replaced(self):
+        with TemporaryDirectory() as directory:
+            base = Path(directory)
+            stage, target = base / "stage", base / "tf"
+            stage.mkdir()
+            (stage / "otype.tf").write_text("built", encoding="utf-8")
+            target.mkdir()  # simulated race after destination precheck
+            with self.assertRaises((OSError, RuntimeError)):
+                publish_directory_no_replace(stage, target)
+            self.assertTrue(stage.exists())
+            self.assertTrue(target.is_dir())
+            self.assertFalse((target / "otype.tf").exists())
+
+    def test_concurrent_nonempty_directory_is_not_replaced(self):
+        with TemporaryDirectory() as directory:
+            base = Path(directory)
+            stage, target = base / "stage", base / "tf"
+            stage.mkdir()
+            target.mkdir()
+            (target / "existing.tf").write_text("keep", encoding="utf-8")
+            with self.assertRaises((OSError, RuntimeError)):
+                publish_directory_no_replace(stage, target)
+            self.assertEqual((target / "existing.tf").read_text(encoding="utf-8"), "keep")
 
     def test_output_outside_source_is_allowed(self):
         with TemporaryDirectory() as directory:
