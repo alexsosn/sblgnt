@@ -261,6 +261,15 @@ def main() -> int:
         group_morphgnt_text(iter_source_words(args.morphgnt_dir)),
         faithlife_verse_texts(args.faithlife_dir / "data" / "sblgnt" / "text"),
     )
+    if (
+        report["coverage"]["morphgnt_verses"] != EXPECTED_MORPHGNT_VERSES
+        or report["coverage"]["faithlife_verses"] != EXPECTED_FAITHLIFE_VERSES
+    ):
+        report["gate_status"] = "fail"
+        report["expected_pinned_counts"] = {
+            "morphgnt": EXPECTED_MORPHGNT_VERSES,
+            "faithlife": EXPECTED_FAITHLIFE_VERSES,
+        }
     serialized = json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     print(serialized, end="")
     if args.report:
