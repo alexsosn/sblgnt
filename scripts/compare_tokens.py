@@ -18,6 +18,21 @@ from scripts.audit_tf import BOOKS
 from scripts.compare_morphgnt import MORPHGNT_COMMIT, verify_source_checkout
 
 MAX_EXAMPLES = 30
+LEGACY_COMMIT = "8b11a5be0a5cdad16c82e3d029e79ad0b0b9e4b4"
+# Exact 18 source word changes in MorphGNT 2024 merge aaed91e57 (PR #68).
+# Coordinates cross-checked against the 2022 TF vs 2024 source CI report.
+EXPECTED_2024_ACCENT_LOCI = frozenset({
+    ("Matthew", 15, 14, 5), ("Matthew", 15, 15, 10),
+    ("Matthew", 26, 36, 10), ("Mark", 7, 27, 10),
+    ("Luke", 1, 27, 10), ("Luke", 2, 51, 8),
+    ("Luke", 5, 1, 22), ("Luke", 8, 20, 15),
+    ("Luke", 10, 38, 17),
+    ("John", 7, 34, 5), ("John", 7, 36, 12),
+    ("John", 7, 42, 9), ("John", 7, 42, 17),
+    ("John", 10, 29, 9), ("Acts", 2, 29, 12),
+    ("1_Corinthians", 14, 37, 14),
+    ("Hebrews", 3, 6, 9), ("2_Peter", 2, 10, 13),
+})
 
 
 @dataclass(frozen=True)
@@ -85,7 +100,8 @@ def tf_rows(tf_dir: Path):
             yield TokenRow(str(book), int(chapter), int(verse), ordinal, str(word), str(lemma))
 
 
-def compare_token_rows(source, target, *, example_limit: int = MAX_EXAMPLES) -> dict:
+def compare_token_rows(source, target, *, example_limit: int = MAX_EXAMPLES,
+                       expected_word_changes=frozenset(), source_commit=MORPHGNT_COMMIT) -> dict:
     """Fail closed on sequence-key drift; count exact and Unicode-only differences."""
     if example_limit < 0:
         raise ValueError("example_limit must be nonnegative")
@@ -94,6 +110,7 @@ def compare_token_rows(source, target, *, example_limit: int = MAX_EXAMPLES) -> 
     by_book: dict[str, dict[str, int]] = {}
     examples: list[dict[str, str | int | list[str]]] = []
     total = 0
+    actual_word_changes: set[tuple[str, int, int, int]] = set()
     for left, right in zip_longest(source, target):
         if left is None or right is None:
             raise ValueError(f"source/TF token sequence length mismatch at position {total + 1}")
@@ -104,6 +121,8 @@ def compare_token_rows(source, target, *, example_limit: int = MAX_EXAMPLES) -> 
         for field in ("word", "lemma"):
             a, b = getattr(left, field), getattr(right, field)
             if a != b:
+                if field == "word":
+                    actual_word_changes.add(left.key)
                 diffs[field] += 1
                 changed.append(field)
                 if unicodedata.normalize("NFC", a) != unicodedata.normalize("NFC", b):
@@ -118,8 +137,15 @@ def compare_token_rows(source, target, *, example_limit: int = MAX_EXAMPLES) -> 
                     "verse": left.verse, "ordinal": left.ordinal,
                     "different_features": changed,
                 })
+    unexpected_word_changes = actual_word_changes - expected_word_changes
+    missing_expected_word_changes = expected_word_changes - actual_word_changes
+    approved = not unexpected_word_changes and not missing_expected_word_changes and diffs["lemma"] == 0
     return {
         "status": "match" if not diffs else "differences",
+        "gate_status": "pass" if approved else "fail",
+        "expected_source_word_changes": len(expected_word_changes),
+        "unexpected_word_changes": len(unexpected_word_changes),
+        "missing_expected_word_changes": len(missing_expected_word_changes),
         "tokens_compared": total,
         "different_word_count": diffs["word"],
         "different_lemma_count": diffs["lemma"],
@@ -127,7 +153,7 @@ def compare_token_rows(source, target, *, example_limit: int = MAX_EXAMPLES) -> 
         "different_lemma_after_nfc_count": normalized_diffs["lemma"],
         "by_book": {book: by_book[book] for book in BOOKS if book in by_book},
         "examples": examples,
-        "source_revision": f"morphgnt/sblgnt@{MORPHGNT_COMMIT}",
+        "source_revision": f"morphgnt/sblgnt@{source_commit}",
         "scope": "Source word and lemma versus same native TF verse/token; not text or morphology certification",
     }
 
@@ -137,15 +163,22 @@ def main() -> int:
     parser.add_argument("--tf-dir", type=Path, default=Path("tf/2022"))
     parser.add_argument("--source-dir", type=Path, required=True)
     parser.add_argument("--report", type=Path)
-    parser.add_argument("--allow-differences", action="store_true", help="research-only: publish counts without passing lexical parity")
+    parser.add_argument("--source-commit", choices=[LEGACY_COMMIT, MORPHGNT_COMMIT], required=True,
+                        help="exact MorphGNT source revision under test")
+    parser.add_argument("--expect-2024-accent-corrections", action="store_true",
+                        help="verify exactly 18 source-word changes documented in MorphGNT PR #68")
     args = parser.parse_args()
-    verify_source_checkout(args.source_dir)
-    result = compare_token_rows(source_rows(args.source_dir), tf_rows(args.tf_dir))
+    if args.expect_2024_accent_corrections and args.source_commit != MORPHGNT_COMMIT:
+        parser.error("2024 accent corrections require the 2024 source revision")
+    verify_source_checkout(args.source_dir, expected_commit=args.source_commit)
+    approved = EXPECTED_2024_ACCENT_LOCI if args.expect_2024_accent_corrections else frozenset()
+    result = compare_token_rows(source_rows(args.source_dir), tf_rows(args.tf_dir),
+                                expected_word_changes=approved, source_commit=args.source_commit)
     serialized = json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
     print(serialized, end="")
     if args.report:
         args.report.write_text(serialized, encoding="utf-8")
-    return 0 if result["status"] == "match" or args.allow_differences else 1
+    return 0 if result["gate_status"] == "pass" else 1
 
 
 if __name__ == "__main__":
