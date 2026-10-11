@@ -39,6 +39,13 @@ BOOK_ORDER = {book: i for i, book in enumerate(BOOKS)}
 # Explicit SBLGNT textual editorial sigla, not generic Unicode symbols.
 EDITORIAL_SIGLA = frozenset("⸀⸂⸃⟦⟧")
 MAX_EXAMPLES = 60
+EXPECTED_MORPHGNT_VERSES = 7927
+EXPECTED_FAITHLIFE_VERSES = 7939
+FOCUS_VERSES = (
+    [("Mark", 16, verse) for verse in range(9, 21)]
+    + [("John", 7, 53)]
+    + [("John", 8, verse) for verse in range(1, 12)]
+)
 
 
 @dataclass(frozen=True)
@@ -202,6 +209,22 @@ def compare_verse_text(morphgnt, faithlife, *,
                 "category": category,
                 "morphgnt_source_tokens": old[ref].token_count,
             })
+    focus = []
+    for ref in FOCUS_VERSES:
+        source_status = (
+            "shared" if ref in old and ref in new
+            else "faithlife_only" if ref in new
+            else "morphgnt_only" if ref in old
+            else "absent_from_both"
+        )
+        focus.append({
+            "reference": f"{ref[0]} {ref[1]}:{ref[2]}",
+            "source_status": source_status,
+            "category": (
+                categorize_text_difference(old[ref].text, new[ref].text)
+                if source_status == "shared" else None
+            ),
+        })
     return {
         "gate_status": coverage["status"],
         "text_status": "exact" if counts["exact"] == len(shared) else "differences",
@@ -213,6 +236,7 @@ def compare_verse_text(morphgnt, faithlife, *,
         },
         "coverage": coverage,
         "examples": samples,
+        "focus_passages": focus,
         "source_revision": {
             "morphgnt": f"morphgnt/sblgnt@{MORPHGNT_COMMIT}",
             "faithlife": f"Faithlife/SBLGNT@{FAITHLIFE_COMMIT}",
