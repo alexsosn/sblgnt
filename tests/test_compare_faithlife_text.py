@@ -8,6 +8,7 @@ import unittest
 from scripts.compare_faithlife_text import (
     VerseText, categorize_text_difference, compare_verse_text,
     faithlife_verse_texts, group_morphgnt_text,
+    CATEGORIES, EXPECTED_PINNED_CATEGORIES,
 )
 from scripts.build_base_tf import SourceWord
 
@@ -17,6 +18,14 @@ def record(verse, text, *, book="Mark", chapter=1, tokens=1):
 
 
 class SourceTextTests(unittest.TestCase):
+    def test_independently_verified_pinned_verse_classification_is_complete(self):
+        self.assertEqual(set(CATEGORIES), set(EXPECTED_PINNED_CATEGORIES))
+        self.assertEqual(sum(EXPECTED_PINNED_CATEGORIES.values()), 7927)
+        self.assertEqual(EXPECTED_PINNED_CATEGORIES["exact"], 6804)
+        self.assertEqual(EXPECTED_PINNED_CATEGORIES["apostrophe_glyph_only"], 1087)
+        self.assertEqual(EXPECTED_PINNED_CATEGORIES["initial_capitalization_only"], 2)
+        self.assertEqual(EXPECTED_PINNED_CATEGORIES["textual_or_orthographic_difference"], 0)
+
     def test_group_source_words_uses_actual_text_column_and_preserves_sigla(self):
         rows = [
             SourceWord("Mark", 1, 1, 1, "N-", "----NSF-", "Ἀρχὴ", "Ἀρχὴ", "ἀρχή", "ἀρχή"),
