@@ -27,9 +27,10 @@ def compare_morph_rows(source, generated, *, max_examples: int = MAX_EXAMPLES) -
     populated = Counter()
     examples: list[dict] = []
     tokens = 0
-    for original, (key, actual) in zip_longest(source, generated, fillvalue=None):
-        if original is None or key is None:
+    for original, candidate in zip_longest(source, generated):
+        if original is None or candidate is None:
             raise ValueError(f"source / native TF token count mismatch at {tokens+1}")
+        key, actual = candidate
         expected_key = (original.book, original.chapter, original.verse, original.ordinal)
         if expected_key != key:
             raise ValueError(f"source / native TF reference mismatch at {tokens+1}: {expected_key} vs {key}")
