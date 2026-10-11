@@ -34,6 +34,7 @@ CATEGORIES = (
     "apostrophe_glyph_only",
     "editorial_marker_only",
     "punctuation_only",
+    "initial_capitalization_only",
     "textual_or_orthographic_difference",
 )
 BOOK_ORDER = {book: i for i, book in enumerate(BOOKS)}
@@ -180,6 +181,10 @@ def categorize_text_difference(morphgnt_text: str, faithlife_text: str) -> str:
     a, b = _space_normalize(_without_punctuation(a)), _space_normalize(_without_punctuation(b))
     if a == b:
         return "punctuation_only"
+    # Pinned source counterexamples: Matthew 27:24 and Titus 3:13.
+    # Only the first character may vary by case; preserve internal case.
+    if len(a) == len(b) and a[1:] == b[1:] and a[0].casefold() == b[0].casefold():
+        return "initial_capitalization_only"
     return "textual_or_orthographic_difference"
 
 
