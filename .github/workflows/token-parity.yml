@@ -1,10 +1,7 @@
 name: Audit pinned MorphGNT token identity
 
+# On-demand diagnostic workflow. Routine PR/main gates run together in build-base.yml.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:

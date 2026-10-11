@@ -20,6 +20,13 @@ jobs:
           ref: aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d
           path: upstream-morphgnt
           persist-credentials: false
+      - name: Checkout pinned historical MorphGNT 2018 comparison baseline
+        uses: actions/checkout@v4
+        with:
+          repository: morphgnt/sblgnt
+          ref: 8b11a5be0a5cdad16c82e3d029e79ad0b0b9e4b4
+          path: upstream-morphgnt-legacy
+          persist-credentials: false
       - name: Checkout pinned Faithlife SBLGNT v1.2 text
         uses: actions/checkout@v4
         with:
@@ -38,6 +45,14 @@ jobs:
         run: python -m scripts.compare_faithlife_refs --morphgnt-dir upstream-morphgnt --faithlife-dir upstream-faithlife --report "$RUNNER_TEMP/faithlife-v12-reference-diff.json"
       - name: Install pinned Text-Fabric
         run: python -m pip install text-fabric==13.1.0
+      - name: Audit historical TF 2022 structure
+        run: python -m scripts.audit_tf --tf-dir tf/2022 --report "$RUNNER_TEMP/legacy-tf-structure.json"
+      - name: Compare historical TF verses with pinned MorphGNT 2024 source
+        run: python -m scripts.compare_morphgnt --tf-dir tf/2022 --source-dir upstream-morphgnt --report "$RUNNER_TEMP/legacy-source-coverage.json"
+      - name: Require exact historical word and lemma identity
+        run: python -m scripts.compare_tokens --tf-dir tf/2022 --source-dir upstream-morphgnt-legacy --source-commit 8b11a5be0a5cdad16c82e3d029e79ad0b0b9e4b4 --report "$RUNNER_TEMP/legacy-2018-lexical-parity.json"
+      - name: Require exactly the 18 documented 2024 accent corrections
+        run: python -m scripts.compare_tokens --tf-dir tf/2022 --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --expect-2024-accent-corrections --report "$RUNNER_TEMP/legacy-2024-lexical-parity.json"
       - name: Convert immutable real 27-book upstream source
         run: python -m scripts.build_base_tf --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --output "$RUNNER_TEMP/sblgnt-generated"
       - name: Clean reload and check native book/chapter/verse/word partition
@@ -54,6 +69,10 @@ jobs:
         with:
           name: morphgnt-base-conversion-audits
           path: |
+            ${{ runner.temp }}/legacy-tf-structure.json
+            ${{ runner.temp }}/legacy-source-coverage.json
+            ${{ runner.temp }}/legacy-2018-lexical-parity.json
+            ${{ runner.temp }}/legacy-2024-lexical-parity.json
             ${{ runner.temp }}/legacy-feature-lineage.json
             ${{ runner.temp }}/faithlife-v12-reference-diff.json
             ${{ runner.temp }}/base-structure-audit.json
