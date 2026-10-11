@@ -32,6 +32,10 @@ JOHN_2023_PERICOPE = frozenset(
 # revisions, NOT inferred merely from verse totals or another Greek edition.
 EXPECTED_FAITHLIFE_ONLY = JOHN_2023_PERICOPE
 EXPECTED_MORPH_ONLY = frozenset()
+REQUIRED_SHARED = frozenset({
+    ("Mark", 16, 8), ("Mark", 16, 9), ("Mark", 16, 20),
+    ("John", 7, 52), ("John", 8, 12),
+})
 
 
 def parse_faithlife_book_lines(lines, *, book: str, file_code: str):
@@ -118,6 +122,7 @@ def compare_reference_sets(
     *,
     expected_faithlife_only=EXPECTED_FAITHLIFE_ONLY,
     expected_morph_only=EXPECTED_MORPH_ONLY,
+    required_shared=frozenset(),
 ) -> dict:
     """Only source-reviewed, edition-qualified exceptions pass the gate."""
     f_only = faithlife - morphgnt
@@ -128,7 +133,8 @@ def compare_reference_sets(
     unexpected_m = m_only - expected_m
     absent_expected_f = expected_f - f_only
     absent_expected_m = expected_m - m_only
-    unapproved = unexpected_f | unexpected_m | absent_expected_f | absent_expected_m
+    missing_shared = set(required_shared) - (morphgnt & faithlife)
+    unapproved = unexpected_f | unexpected_m | absent_expected_f | absent_expected_m | missing_shared
     by_book = Counter(x[0] for x in f_only)
     return {
         "status": "pass" if not unapproved else "fail",
@@ -137,6 +143,9 @@ def compare_reference_sets(
         "faithlife_verse_count": len(faithlife),
         "shared_verse_count": len(faithlife & morphgnt),
         "verified_faithlife_only_count": len(f_only & expected_f),
+        "verified_required_shared_count": len(set(required_shared) & morphgnt & faithlife),
+        "missing_required_shared_count": len(missing_shared),
+        "missing_required_shared": sorted(map(_format_ref, missing_shared)),
         "unexpected_faithlife_only_count": len(unexpected_f),
         "unexpected_morph_only_count": len(unexpected_m),
         "missing_expected_faithlife_only_count": len(absent_expected_f),
@@ -161,6 +170,7 @@ def main() -> int:
     report = compare_reference_sets(
         load_morphgnt_references(args.morphgnt_dir),
         load_faithlife_references(args.faithlife_dir),
+        required_shared=REQUIRED_SHARED,
     )
     report["morphgnt_source_commit"] = MORPHGNT_COMMIT
     report["faithlife_source_commit"] = FAITHLIFE_COMMIT
