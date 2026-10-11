@@ -13,8 +13,8 @@ GitHub Issues are currently disabled in this fork (GitHub API returns HTTP 410).
 - [x] Strict pinned 2018 word/lemma parity and exactly 18 reviewed MorphGNT 2024 accent corrections (merged PR #3).
 - [x] Native source-base converter preserves text, normalized words, POS and parsing codes on all 137,554 source tokens (merged PR #4), with separate full-corpus audit. 31 legacy feature classes inventoried and 20 unverified (merged PR #5).
 - [x] Research original 116-cell notebook and source-data lineage; identify unpinned external BibleOL/Excel data, undefined `propernoun` and unstable legacy morphological derivations (merged PR #5). Original 2021 source SHA remains unproven.
-- [ ] Compare separately pinned MorphGNT v6.12 and official SBLGNT v1.2 complete verse address inventories and document verified edition differences (PR #7; exact real-source CI pending). Reading-level divergences remain research.
-- [ ] Investigate John 7:53–8:11, Mark 16 and all other missing addresses with separate pinned official Greek text; require source-supported exception inventory. Do **not** equate SBLGNT/N1904 verse-count differences with errors.
+- [x] Compare pinned MorphGNT 6.12 and official SBLGNT v1.2, with exact 27-book address inventory (PR #8; 7,927 vs 7,939; only John 7:53–8:11 differs). Greek reading-level divergences remain research.
+- [x] Resolve official-vs-MorphGNT verse-address differences: only 12 Johannine pericope addresses; shared Mark 16:8/9/20 and John 7:52, 8:12 independently guarded (PR #8). Reading-level differences and editorial apparatus remain separate.
 - [x] Deterministic source-only converter and TDD/full-source reloading (merged PR #4); versioned distributable TF and TF app compatibility/fingerprints remain pending.
 - [x] Create source-derived, strictly positional morph_* features with vocative, absent-value semantics and full-source audit (merged PR #6).
 - [ ] Perform source-by-source licensing review (SBLGNT base text, MorphGNT CC BY-SA morphology, BibleOL enrichments) **before** distributing new generated TF files.
