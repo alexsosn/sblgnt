@@ -101,7 +101,7 @@ def faithlife_verse_texts(text_dir: Path, *, book_files=BOOK_FILES):
 
     Faithlife's one-line verse format has final line padding; remove only line
     terminators and trailing ASCII spaces, not internal punctuation or sigla.
-    This is distinct from source-byte fidelity; see docs/FAITHLIFE_TEXT_AUDIT.md.
+    This is distinct from source-byte fidelity; see docs/EDITION_COVERAGE.md.
     """
     expected = {f"{stem}.txt" for stem in book_files.values()}
     if not text_dir.is_dir():
