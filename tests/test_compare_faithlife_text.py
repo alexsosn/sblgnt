@@ -87,8 +87,8 @@ class SourceTextTests(unittest.TestCase):
     def test_expected_john_additions_are_not_counted_as_shared_text_differences(self):
         from scripts.compare_faithlife_refs import EXPECTED_ADDED_JOHN_PASSAGE
         morph = [record(12, "λόγος", book="John", chapter=8)]
-        faith = [record(12, "λόγος", book="John", chapter=8)]
-        faith += [VerseText(ref, "γυνή", 1) for ref in sorted(EXPECTED_ADDED_JOHN_PASSAGE)]
+        faith = [VerseText(ref, "γυνή", 1) for ref in sorted(EXPECTED_ADDED_JOHN_PASSAGE)]
+        faith += [record(12, "λόγος", book="John", chapter=8)]
         report = compare_verse_text(morph, faith)
         self.assertEqual(report["coverage"]["status"], "pass")
         self.assertEqual(report["compared_shared_verses"], 1)
