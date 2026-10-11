@@ -21,6 +21,11 @@ GitHub Issues are currently disabled in this fork (GitHub API returns HTTP 410).
 - [ ] Perform source-by-source licensing review (SBLGNT base text, MorphGNT CC BY-SA morphology, BibleOL enrichments) **before** distributing new generated TF files.
 - [ ] Rebuild and tag a verified TF parent with published source revisions and full coverage/diff report.
 
+## P1b — CI cost and release readiness
+- [ ] Consolidate four redundant PR runners into one full-source validation job, retaining every historical and new auditor and independent evidence report; keep standalone audits manual-only (CI consolidation PR; requires green exact-head real CI and adversarial review).
+- [ ] Record and verify required branch-protection status check names after consolidation (GitHub integration cannot inspect repository protection settings).
+- [ ] Prepare explicit CC BY 4.0 SBLGNT source and CC BY-SA 3.0 morphology attribution and machine-checkable provenance for any versioned TF artifact; no silent release of legacy BibleOL workbooks.
+
 ## P2 — Coptic NT integration
 - [ ] Depend on [CopticScriptorium-TF #91](https://github.com/alexsosn/CopticScriptorium-TF/issues/91) for native preservation of upstream `sbl_greek` and `sbl_apparatus`.
 - [ ] Inventory all 615 pinned NT candidate records; establish real-source Mark and 1 Corinthians pilots.
