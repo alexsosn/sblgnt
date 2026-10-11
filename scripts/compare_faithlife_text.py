@@ -43,6 +43,18 @@ EDITORIAL_SIGLA = frozenset("⸀⸂⸃⟦⟧")
 MAX_EXAMPLES = 60
 EXPECTED_MORPHGNT_VERSES = 7927
 EXPECTED_FAITHLIFE_VERSES = 7939
+# Independently recomputed against both immutable 27-book source revisions.
+# Ordered exclusive categories; update only with reviewed source evidence.
+EXPECTED_PINNED_CATEGORIES = {
+    "exact": 6804,
+    "unicode_only": 18,
+    "whitespace_only": 0,
+    "apostrophe_glyph_only": 1087,
+    "editorial_marker_only": 6,
+    "punctuation_only": 10,
+    "initial_capitalization_only": 2,
+    "textual_or_orthographic_difference": 0,
+}
 FOCUS_VERSES = (
     [("Mark", 16, verse) for verse in range(9, 21)]
     + [("John", 7, 53)]
@@ -298,6 +310,9 @@ def main() -> int:
             "morphgnt": EXPECTED_MORPHGNT_VERSES,
             "faithlife": EXPECTED_FAITHLIFE_VERSES,
         }
+    if report["categories"] != EXPECTED_PINNED_CATEGORIES:
+        report["gate_status"] = "fail"
+        report["expected_pinned_categories"] = EXPECTED_PINNED_CATEGORIES
     serialized = json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     print(serialized, end="")
     if args.report:
