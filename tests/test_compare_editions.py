@@ -83,6 +83,25 @@ class FaithlifeEditionTests(unittest.TestCase):
         self.assertEqual(report["unexpected_morph_only"], ["Mark 16:9"])
         self.assertEqual(report["status"], "fail")
 
+    def test_explicit_mark_endings_must_be_shared_not_inferred(self):
+        shared = {("Mark", 16, 8), ("Mark", 16, 9), ("Mark", 16, 20)}
+        missing = shared - {("Mark", 16, 9)}
+        report = compare_reference_sets(
+            {("Mark", 16, 9)}, {("Mark", 16, 9)},
+            expected_faithlife_only=set(), required_shared=shared
+        )
+        self.assertEqual(report["status"], "fail")
+        self.assertEqual(report["missing_required_shared_count"], len(missing))
+        self.assertEqual(set(report["missing_required_shared"]),
+                         {"Mark 16:8", "Mark 16:20"})
+
+    def test_explicit_shared_verse_reference_passes(self):
+        shared = {("Mark", 16, 8), ("Mark", 16, 9), ("Mark", 16, 20)}
+        report = compare_reference_sets(shared, shared,
+                    expected_faithlife_only=set(), required_shared=shared)
+        self.assertEqual(report["status"], "pass")
+        self.assertEqual(report["verified_required_shared_count"], 3)
+
     def test_report_contains_addresses_not_greek_text(self):
         report = compare_reference_sets(set(), {("Mark", 16, 9)},
                                         expected_faithlife_only=set())
