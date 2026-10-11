@@ -20,11 +20,20 @@ jobs:
           ref: aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d
           path: upstream-morphgnt
           persist-credentials: false
+      - name: Checkout immutable official SBLGNT edition
+        uses: actions/checkout@v4
+        with:
+          repository: Faithlife/SBLGNT
+          ref: c4d241a9c1c479a55b989ba35a4976c1d0b8052c
+          path: upstream-faithlife
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Run all converter and audit tests
         run: python -m unittest discover -s tests -v
+      - name: Compare exact MorphGNT versus Faithlife verse coverage
+        run: python -m scripts.compare_editions --morphgnt-dir upstream-morphgnt --faithlife-dir upstream-faithlife --report "$RUNNER_TEMP/edition-address-comparison.json"
       - name: Guard inherited 31-feature lineage inventory
         run: python -m scripts.feature_provenance --tf-dir tf/2022 --report "$RUNNER_TEMP/legacy-feature-lineage.json"
       - name: Install pinned Text-Fabric
@@ -45,6 +54,7 @@ jobs:
         with:
           name: morphgnt-base-conversion-audits
           path: |
+            ${{ runner.temp }}/edition-address-comparison.json
             ${{ runner.temp }}/legacy-feature-lineage.json
             ${{ runner.temp }}/base-structure-audit.json
             ${{ runner.temp }}/base-token-parity.json
