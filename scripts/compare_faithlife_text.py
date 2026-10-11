@@ -31,6 +31,7 @@ CATEGORIES = (
     "exact",
     "unicode_only",
     "whitespace_only",
+    "apostrophe_glyph_only",
     "editorial_marker_only",
     "punctuation_only",
     "textual_or_orthographic_difference",
@@ -138,6 +139,15 @@ def _space_normalize(text: str) -> str:
     return " ".join(text.split())
 
 
+def _canonical_apostrophe(text: str) -> str:
+    """Normalize the pinned sources' U+2019 vs U+02BC elision glyphs.
+
+    Keep this intentionally narrow: arbitrary Greek accents, punctuation,
+    editorial marks, and lexical spelling are never erased here.
+    """
+    return text.replace("\u2019", "\u02bc")
+
+
 def _without_editorial(text: str) -> str:
     return "".join(c for c in text if c not in EDITORIAL_SIGLA)
 
@@ -161,6 +171,9 @@ def categorize_text_difference(morphgnt_text: str, faithlife_text: str) -> str:
     a, b = _space_normalize(a), _space_normalize(b)
     if a == b:
         return "whitespace_only"
+    a, b = _canonical_apostrophe(a), _canonical_apostrophe(b)
+    if a == b:
+        return "apostrophe_glyph_only"
     a, b = _space_normalize(_without_editorial(a)), _space_normalize(_without_editorial(b))
     if a == b:
         return "editorial_marker_only"
