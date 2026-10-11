@@ -67,6 +67,9 @@ class SourceTextTests(unittest.TestCase):
             ("⸀κατ’", "κατʼ", "editorial_marker_only"),
             ("⸀χριστοῦ.", "χριστοῦ.", "editorial_marker_only"),
             ("λόγος,", "λόγος·", "punctuation_only"),
+            ("ἰδὼν", "Ἰδὼν", "initial_capitalization_only"),
+            ("ζηνᾶν", "Ζηνᾶν", "initial_capitalization_only"),
+            ("θεος", "θεΟΣ", "textual_or_orthographic_difference"),
             ("λόγος", "θεός", "textual_or_orthographic_difference"),
             ("α β", "β α", "textual_or_orthographic_difference"),
         )
