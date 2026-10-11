@@ -10,12 +10,13 @@ GitHub Issues are currently disabled in this fork (GitHub API returns HTTP 410).
 
 ## P1 — Reproducible dataset rebuild and rights
 - [x] Strict pinned MorphGNT 2024 versus native TF reference and per-verse token count audit (merged PR #2).
-- [ ] Strict pinned 2018 word/lemma parity and exactly 18 reviewed MorphGNT 2024 accent corrections (PR #3; requires independently reviewed passing real CI).
-- [ ] Check text/punctuation, POS, parsing code, normalized form and enrichment provenance against pinned sources without silently conflating versions.
-- [ ] Research all original `programs/` conversion notebooks and the precise parent version/commit, dataset lineage, and generated features.
+- [x] Strict pinned 2018 word/lemma parity and exactly 18 reviewed MorphGNT 2024 accent corrections (merged PR #3).
+- [x] Native source-base converter preserves text, normalized words, POS and parsing codes on all 137,554 source tokens (merged PR #4), with separate full-corpus audit. 31 legacy feature classes inventoried and 20 unverified (merged PR #5).
+- [x] Research original 116-cell notebook and source-data lineage; identify unpinned external BibleOL/Excel data, undefined `propernoun` and unstable legacy morphological derivations (merged PR #5). Original 2021 source SHA remains unproven.
 - [ ] Pin MorphGNT v6.12 input separately from base SBLGNT text; audit every book/chapter/verse and passage-level editorial differences against separately pinned source revisions.
 - [ ] Investigate John 7:53–8:11, Mark 16 and any reported missing references with source-level evidence. Do **not** equate SBLGNT/N1904 verse-count differences with errors.
-- [ ] Define schema/versioning policy and deterministic build script; TDD regressions for actual text, punctuation, morphology, section boundaries, clean TF load, TF app, and output fingerprints.
+- [x] Deterministic source-only converter and TDD/full-source reloading (merged PR #4); versioned distributable TF and TF app compatibility/fingerprints remain pending.
+- [ ] Create source-derived, strictly positional morph_* features with vocative, absent-value semantics and full-source audit (PR #6).
 - [ ] Perform source-by-source licensing review (SBLGNT base text, MorphGNT CC BY-SA morphology, BibleOL enrichments) **before** distributing new generated TF files.
 - [ ] Rebuild and tag a verified TF parent with published source revisions and full coverage/diff report.
 

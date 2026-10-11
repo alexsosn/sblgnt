@@ -37,6 +37,8 @@ jobs:
         run: python -m scripts.compare_tokens --tf-dir "$RUNNER_TEMP/sblgnt-generated" --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --report "$RUNNER_TEMP/base-token-parity.json"
       - name: Independently verify all raw source columns and combined morphology
         run: python -m scripts.audit_base_fields --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --tf-dir "$RUNNER_TEMP/sblgnt-generated" --report "$RUNNER_TEMP/base-all-fields-audit.json"
+      - name: Check every derived morph_* feature against pinned source code
+        run: python -m scripts.audit_derived_morphology --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --tf-dir "$RUNNER_TEMP/sblgnt-generated" --report "$RUNNER_TEMP/base-derived-morphology-audit.json"
       - name: Upload only source-free audit counts
         uses: actions/upload-artifact@v4
         if: always()
@@ -47,4 +49,5 @@ jobs:
             ${{ runner.temp }}/base-structure-audit.json
             ${{ runner.temp }}/base-token-parity.json
             ${{ runner.temp }}/base-all-fields-audit.json
+            ${{ runner.temp }}/base-derived-morphology-audit.json
           if-no-files-found: ignore

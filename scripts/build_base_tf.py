@@ -18,6 +18,7 @@ from tempfile import TemporaryDirectory
 from scripts.audit_tf import BOOKS
 from scripts.compare_morphgnt import MORPHGNT_COMMIT, verify_source_checkout
 from scripts.compare_tokens import LEGACY_COMMIT
+from scripts.source_morphology import MORPH_FEATURES, decode_source_morphology
 
 
 @dataclass(frozen=True)
@@ -186,6 +187,7 @@ def build_base_tf(source: Path, output: Path, *, source_commit: str) -> dict:
                 source_pos=row.pos,
                 source_parsing=row.parsing,
                 source_token_ordinal=row.ordinal,
+                **decode_source_morphology(row.pos, row.parsing),
             )
             cv.terminate(slot)
             counts["word"] += 1
@@ -210,7 +212,8 @@ def build_base_tf(source: Path, output: Path, *, source_commit: str) -> dict:
                 "Source": "https://github.com/morphgnt/sblgnt",
                 "sourceCommit": source_commit,
                 "Converter": "alexsosn/sblgnt:scripts/build_base_tf.py",
-                "AnnotationScope": "unaugmented pinned MorphGNT source fields only",
+                "AnnotationScope": "pinned MorphGNT fields plus transparent positional morph_* derivations",
+                "MorphologyDecoder": "scripts.source_morphology:decode_source_morphology/v1",
             },
             intFeatures={"chapter", "verse", "source_token_ordinal"},
             featureMeta={
@@ -225,6 +228,8 @@ def build_base_tf(source: Path, output: Path, *, source_commit: str) -> dict:
                 "source_pos": {"description": "Unmodified MorphGNT POS column"},
                 "source_parsing": {"description": "Unmodified MorphGNT parsing column"},
                 "source_token_ordinal": {"description": "One-based token ordinal within source verse"},
+                **{name: {"description": "Derived from documented MorphGNT POS/parsing code; absent values omitted"}
+                   for name in MORPH_FEATURES},
             },
             warn=True,
             force=False,
