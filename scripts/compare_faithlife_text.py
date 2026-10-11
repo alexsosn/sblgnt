@@ -124,6 +124,8 @@ def faithlife_verse_texts(text_dir: Path, *, book_files=BOOK_FILES):
                 seen.add(ref)
                 previous = key
                 verse_text = line[match.end():].rstrip("\r\n").rstrip(" ")
+                if "\t" in verse_text:
+                    raise ValueError(f"unexpected extra tab in Faithlife verse: {ref}")
                 if not verse_text:
                     raise ValueError(f"empty Faithlife verse: {ref}")
                 count += 1
@@ -198,17 +200,23 @@ def compare_verse_text(morphgnt, faithlife, *,
     counts = Counter({category: 0 for category in CATEGORIES})
     by_book: dict[str, Counter] = {}
     samples: list[dict] = []
+    per_book_samples: dict[str, list[dict]] = {}
     shared = sorted(set(old) & set(new), key=_section_key)
     for ref in shared:
         category = categorize_text_difference(old[ref].text, new[ref].text)
         counts[category] += 1
         by_book.setdefault(ref[0], Counter())[category] += 1
-        if category != "exact" and len(samples) < example_limit:
-            samples.append({
+        if category != "exact":
+            example = {
                 "reference": f"{ref[0]} {ref[1]}:{ref[2]}",
                 "category": category,
                 "morphgnt_source_tokens": old[ref].token_count,
-            })
+            }
+            if len(samples) < example_limit:
+                samples.append(example)
+            selected = per_book_samples.setdefault(ref[0], [])
+            if len(selected) < 3:
+                selected.append(example)
     focus = []
     for ref in FOCUS_VERSES:
         source_status = (
@@ -227,7 +235,8 @@ def compare_verse_text(morphgnt, faithlife, *,
         })
     return {
         "gate_status": coverage["status"],
-        "text_status": "exact" if counts["exact"] == len(shared) else "differences",
+        "text_status": ("no_shared_verses" if not shared else
+                        "exact" if counts["exact"] == len(shared) else "differences"),
         "compared_shared_verses": len(shared),
         "categories": dict(counts),
         "by_book": {
@@ -236,6 +245,7 @@ def compare_verse_text(morphgnt, faithlife, *,
         },
         "coverage": coverage,
         "examples": samples,
+        "examples_by_book": {book: per_book_samples.get(book, []) for book in BOOKS},
         "focus_passages": focus,
         "source_revision": {
             "morphgnt": f"morphgnt/sblgnt@{MORPHGNT_COMMIT}",
