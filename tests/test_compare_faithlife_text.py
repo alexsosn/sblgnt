@@ -63,6 +63,8 @@ class SourceTextTests(unittest.TestCase):
             ("Ἀρχὴ", "Ἀρχὴ", "exact"),
             ("ὅς", unicodedata.normalize("NFD", "ὅς"), "unicode_only"),
             ("α β", "α  β", "whitespace_only"),
+            ("κατ’", "κατʼ", "apostrophe_glyph_only"),
+            ("⸀κατ’", "κατʼ", "editorial_marker_only"),
             ("⸀χριστοῦ.", "χριστοῦ.", "editorial_marker_only"),
             ("λόγος,", "λόγος·", "punctuation_only"),
             ("λόγος", "θεός", "textual_or_orthographic_difference"),
