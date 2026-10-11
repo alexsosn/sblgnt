@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from scripts.compare_tokens import TokenRow, compare_token_rows, source_rows
+from scripts.compare_tokens import TokenRow, compare_token_rows, source_rows, EXPECTED_2024_ACCENT_LOCI, LEGACY_COMMIT
 
 
 def row(book="Matthew", chapter=1, verse=1, ordinal=1, word="λόγος", lemma="λόγος"):
@@ -92,6 +92,41 @@ class TokenComparisonTests(unittest.TestCase):
             ("Matthew", 1, 1, 1), ("Matthew", 1, 1, 2),
             ("Matthew", 1, 2, 1), ("Mark", 1, 1, 1)
         ])
+
+
+    def test_allowed_2024_accent_correction_is_pass_with_difference_recorded(self):
+        locus = row().key
+        result = compare_token_rows(
+            [row()], [row(word="ἄλλος")], expected_word_changes=frozenset({locus})
+        )
+        self.assertEqual((result["status"], result["gate_status"]), ("differences", "pass"))
+        self.assertEqual(result["expected_source_word_changes"], 1)
+
+    def test_missing_expected_change_fails_closed(self):
+        result = compare_token_rows([row()], [row()], expected_word_changes=frozenset({row().key}))
+        self.assertEqual((result["status"], result["gate_status"]), ("match", "fail"))
+        self.assertEqual(result["missing_expected_word_changes"], 1)
+
+    def test_unexpected_change_fails_even_with_other_expected_exception(self):
+        other = row(chapter=1, verse=2)
+        result = compare_token_rows(
+            [row(), other], [row(word="ἄλλος"), row(chapter=1, verse=2, word="ξένος")],
+            expected_word_changes=frozenset({row().key})
+        )
+        self.assertEqual(result["gate_status"], "fail")
+        self.assertEqual(result["unexpected_word_changes"], 1)
+
+    def test_lemma_change_never_whitelisted_by_accent_locus(self):
+        result = compare_token_rows(
+            [row()], [row(word="ἄλλος", lemma="ξένος")],
+            expected_word_changes=frozenset({row().key})
+        )
+        self.assertEqual(result["gate_status"], "fail")
+
+    def test_2024_approved_loci_are_eighteen_unique_positions(self):
+        self.assertEqual(len(EXPECTED_2024_ACCENT_LOCI), 18)
+        self.assertEqual(len({r[:3] for r in EXPECTED_2024_ACCENT_LOCI}), 17)
+        self.assertEqual(len(LEGACY_COMMIT), 40)
 
     def test_nonmonotonic_source_verse_rejected(self):
         with TemporaryDirectory() as folder:
