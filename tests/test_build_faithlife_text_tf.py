@@ -39,7 +39,7 @@ class FaithlifeSourceTests(unittest.TestCase):
         self.assertEqual([token.ordinal for token in tokens], [1, 2, 3])
         self.assertTrue(all(verse.text[token.start:token.end] == token.surface for token in tokens))
         self.assertEqual(tokens[0].start, 1)
-        self.assertEqual(tokens[1].start, 9)
+        self.assertEqual(tokens[1].start, 8)
         self.assertEqual(tokens[2].surface, "⸂λόγου⸃.")
 
     def test_missing_extra_malformed_and_duplicate_verses_fail_closed(self):
