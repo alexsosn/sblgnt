@@ -17,7 +17,7 @@ MORPHGNT_COMMIT = "aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d"
 MAX_EXAMPLES = 30
 
 
-def verify_source_checkout(root: Path) -> str:
+def verify_source_checkout(root: Path, *, expected_commit: str = MORPHGNT_COMMIT) -> str:
     """Require a real checkout of the exact upstream commit, not a stated pin."""
     try:
         head = subprocess.check_output(
@@ -26,8 +26,8 @@ def verify_source_checkout(root: Path) -> str:
         ).decode("ascii").strip()
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
         raise ValueError("source directory is not a verifiable Git checkout") from exc
-    if head != MORPHGNT_COMMIT:
-        raise ValueError(f"source commit mismatch: expected {MORPHGNT_COMMIT}, got {head}")
+    if head != expected_commit:
+        raise ValueError(f"source commit mismatch: expected {expected_commit}, got {head}")
     try:
         status = subprocess.check_output(
             ["git", "-C", str(root.resolve()), "status", "--porcelain",
