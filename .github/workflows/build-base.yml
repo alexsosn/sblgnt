@@ -1,0 +1,44 @@
+name: Build pinned MorphGNT base TF
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  source-base:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Acquire exact MorphGNT revision
+        uses: actions/checkout@v4
+        with:
+          repository: morphgnt/sblgnt
+          ref: aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d
+          path: upstream-morphgnt
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run all converter and audit tests
+        run: python -m unittest discover -s tests -v
+      - name: Install pinned Text-Fabric
+        run: python -m pip install text-fabric==13.1.0
+      - name: Convert immutable real 27-book upstream source
+        run: python -m scripts.build_base_tf --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --output "$RUNNER_TEMP/sblgnt-generated"
+      - name: Clean reload and check native book/chapter/verse/word partition
+        run: python -m scripts.audit_tf --tf-dir "$RUNNER_TEMP/sblgnt-generated" --no-2022-baseline --report "$RUNNER_TEMP/base-structure-audit.json"
+      - name: Verify every Greek source word and lemma after real conversion
+        run: python -m scripts.compare_tokens --tf-dir "$RUNNER_TEMP/sblgnt-generated" --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --report "$RUNNER_TEMP/base-token-parity.json"
+      - name: Upload only source-free audit counts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: morphgnt-base-conversion-audits
+          path: |
+            ${{ runner.temp }}/base-structure-audit.json
+            ${{ runner.temp }}/base-token-parity.json
+          if-no-files-found: ignore
