@@ -42,3 +42,37 @@ python -m scripts.compare_faithlife_refs \
 ```
 
 The GitHub Actions workflow checks out both exact Git commits and runs this audit against the full real data.
+
+## Source-text audit (issue #11)
+
+The full 27-book read-only `scripts.compare_faithlife_text` audit compares
+Faithlife v1.2 `data/sblgnt/text/*.txt` Greek verse lines against
+MorphGNT v6.12's **text** (fourth) source column grouped by canonical verse.
+It requires the same immutable Git source revisions and exact book/verse-set
+gate as the preceding reference audit.
+
+The diagnostic distinguishes exact matching, Unicode normalization,
+whitespace, limited editorial sigla, punctuation, and remaining
+**textual-or-orthographic** differences. The last category is not a claim
+that a specific textual-critical variant has been established. MorphGNT
+source records do not encode arbitrary original interword whitespace, while
+Faithlife verse lines include final ASCII padding. Only Faithlife trailing
+ASCII padding is removed at ingest. No morphological annotation is backfilled
+for the 12 Faithlife-only John verses.
+
+The report includes per-book totals and bounded reference-only samples,
+never Greek text, lexical snippets, or per-verse hashes. The CI gate fails
+on malformed source files or unexpected verse-coordinate changes; its initial
+textual differences are **reported for scholarly review**, not assumed to
+be release-blocking differences or silently declared equal. All 27 books
+are read from verified exact Git checkouts.
+
+```bash
+python -m scripts.compare_faithlife_text \
+  --morphgnt-dir upstream-morphgnt \
+  --faithlife-dir upstream-faithlife \
+  --report /tmp/sblgnt-text-diff.json
+```
+
+Official XML presentation and critical apparatus fidelity are separately
+tracked in #12 and #13.
