@@ -25,6 +25,8 @@ jobs:
           python-version: "3.12"
       - name: Run all converter and audit tests
         run: python -m unittest discover -s tests -v
+      - name: Guard inherited 31-feature lineage inventory
+        run: python -m scripts.feature_provenance --tf-dir tf/2022 --report "$RUNNER_TEMP/legacy-feature-lineage.json"
       - name: Install pinned Text-Fabric
         run: python -m pip install text-fabric==13.1.0
       - name: Convert immutable real 27-book upstream source
@@ -41,6 +43,7 @@ jobs:
         with:
           name: morphgnt-base-conversion-audits
           path: |
+            ${{ runner.temp }}/legacy-feature-lineage.json
             ${{ runner.temp }}/base-structure-audit.json
             ${{ runner.temp }}/base-token-parity.json
             ${{ runner.temp }}/base-all-fields-audit.json
