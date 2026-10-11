@@ -94,6 +94,21 @@ class SourceTextTests(unittest.TestCase):
         self.assertEqual(report["compared_shared_verses"], 1)
         self.assertEqual(report["coverage"]["faithlife_only_count"], 12)
 
+    def test_focus_passages_are_explicit_even_when_source_is_missing(self):
+        from scripts.compare_faithlife_refs import EXPECTED_ADDED_JOHN_PASSAGE
+        morph = [record(9, "λόγος", book="Mark", chapter=16)]
+        faith = [record(9, "λόγος", book="Mark", chapter=16)]
+        faith += [VerseText(ref, "γυνή", 1) for ref in sorted(EXPECTED_ADDED_JOHN_PASSAGE)]
+        report = compare_verse_text(morph, faith)
+        focus = {item["reference"]: item for item in report["focus_passages"]}
+        self.assertEqual(len(focus), 24)
+        self.assertEqual(focus["Mark 16:9"]["source_status"], "shared")
+        self.assertEqual(focus["Mark 16:9"]["category"], "exact")
+        self.assertEqual(focus["John 7:53"]["source_status"], "faithlife_only")
+        self.assertIsNone(focus["John 7:53"]["category"])
+        self.assertEqual(focus["Mark 16:20"]["source_status"], "absent_from_both")
+        self.assertEqual(report["coverage"]["status"], "pass")
+
     def test_unexpected_reference_drift_is_failure_not_silent_skip(self):
         morph = [record(1, "ἀρχή")]
         faith = [record(2, "ἀρχή")]
