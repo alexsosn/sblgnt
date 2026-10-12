@@ -23,6 +23,7 @@ REQUIRED = (
     "--expect-2024-accent-corrections",
     # New code's full source/TF coverage must remain non-optional.
     "python -m scripts.feature_provenance",
+    "python -m scripts.release_rights",
     "python -m scripts.compare_faithlife_refs",
     "python -m scripts.faithlife_xml",
     "python -m scripts.build_faithlife_xml_tf",
