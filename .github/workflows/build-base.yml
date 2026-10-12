@@ -73,6 +73,10 @@ jobs:
         run: python -m scripts.audit_base_fields --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --tf-dir "$RUNNER_TEMP/sblgnt-generated" --report "$RUNNER_TEMP/base-all-fields-audit.json"
       - name: Check every derived morph_* feature against pinned source code
         run: python -m scripts.audit_derived_morphology --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --tf-dir "$RUNNER_TEMP/sblgnt-generated" --report "$RUNNER_TEMP/base-derived-morphology-audit.json"
+      - name: Build official pinned Faithlife text-only TF candidate
+        run: python -m scripts.build_faithlife_text_tf --source-dir upstream-faithlife --output "$RUNNER_TEMP/faithlife-text-tf"
+      - name: Independently audit Faithlife text/verse/token spans after native TF reload
+        run: python -m scripts.audit_faithlife_text_tf --source-dir upstream-faithlife --tf-dir "$RUNNER_TEMP/faithlife-text-tf" --report "$RUNNER_TEMP/faithlife-text-tf-audit.json"
       - name: Upload only source-free audit counts
         uses: actions/upload-artifact@v4
         if: always()
@@ -86,6 +90,7 @@ jobs:
             ${{ runner.temp }}/legacy-feature-lineage.json
             ${{ runner.temp }}/faithlife-v12-reference-diff.json
             ${{ runner.temp }}/faithlife-v12-text-diff.json
+            ${{ runner.temp }}/faithlife-text-tf-audit.json
             ${{ runner.temp }}/faithlife-xml-parity.json
             ${{ runner.temp }}/base-structure-audit.json
             ${{ runner.temp }}/base-token-parity.json
