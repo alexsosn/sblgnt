@@ -122,7 +122,7 @@ def verify_candidate_manifest(tf_dir: Path, manifest: dict) -> None:
             if not isinstance(claimed, dict):
                 raise ValueError(f"missing checksum entry for {path}")
             if claimed.get("size") != contents["size"]:
-                raise ValueError(f"size mismatch for {path}")
+                raise ValueError(f"checksum/size mismatch for {path}")
             if claimed.get("sha256") != contents["sha256"]:
                 raise ValueError(f"checksum mismatch for {path}")
         raise ValueError("unexpected file checksums or feature inventory in manifest")
