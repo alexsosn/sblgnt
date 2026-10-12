@@ -139,7 +139,7 @@ def strip_volatile_tf_timestamps(stage: Path) -> int:
         in_header = True
         removed = 0
         for line in data.splitlines(keepends=True):
-            bare = line.rstrip(b"\\r\\n")
+            bare = line.rstrip(bytes((13, 10)))
             if in_header and (bare.startswith(b"@") or not bare):
                 if bare.startswith(b"@dateWritten="):
                     removed += 1
