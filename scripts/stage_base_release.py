@@ -59,6 +59,18 @@ def scan_candidate_tf(tf_dir: Path) -> dict[str, dict]:
         if not path.is_file():
             raise ValueError(f"unexpected nonfile in TF feature inventory: {path.name}")
         feature_paths.append(path)
+    # A local native build is not deterministic while Text-Fabric's
+    # transient write clock remains embedded in its actual feature bytes.
+    for feature in feature_paths:
+        with feature.open("rb") as data:
+            for line in data:
+                bare = line.rstrip(bytes((13, 10)))
+                if bare.startswith(b"@dateWritten="):
+                    raise ValueError(
+                        f"volatile @dateWritten header remains: {feature.name}"
+                    )
+                if bare and not bare.startswith(b"@"):
+                    break
     names = {p.name for p in feature_paths}
     expected = {name + ".tf" for name in EXPECTED_TF_FEATURES}
     if names != expected:

@@ -76,3 +76,19 @@ part of the candidate manifest or any prospective release archive.
 Other directories (including other hidden ones), symlinks, and
 unexpected files still fail. The 23 top-level `*.tf` files alone
 define the byte-reproducibility and SHA-256 contract.
+
+## Deterministic Text-Fabric metadata
+
+A real double-build failure in Actions run 38247203205 proved that
+Text-Fabric 13.1.0 writes its wall-clock `@dateWritten=` value into
+the header of **every one of the 23 feature files**. The converter
+now strips exactly that nonsemantic timestamp metadata *before*
+atomic publication; the original source body lines, Greek text,
+feature values, provenance source SHA and stable `@writtenBy`
+records remain byte-for-byte unchanged. Duplicate or missing
+write-time headers fail closed rather than accepting an unexpected
+TF writer format. The independent candidate scanner also rejects
+a feature where a volatile `@dateWritten` header remains. These
+are real TF source-file integrity checks, not a weakened
+timestamp-ignoring hash comparison: all 23 final candidate files
+must now match exactly across the two builds.

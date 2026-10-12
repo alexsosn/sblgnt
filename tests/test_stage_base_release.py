@@ -81,6 +81,16 @@ class LocalCandidateTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "symlink"):
                 scan_candidate_tf(root)
 
+    def test_uncanonicalized_tf_write_clock_is_not_a_release_candidate(self):
+        with TemporaryDirectory() as scratch:
+            root = self.fixture(Path(scratch) / "tf")
+            (root / "word.tf").write_text(
+                "@valueType=str\\n@dateWritten=2026-10-12T12:00:00Z\\n\\n1\\tα\\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "dateWritten"):
+                scan_candidate_tf(root)
+
     def test_symlink_alias_is_never_treated_as_source_feature(self):
         with TemporaryDirectory() as scratch:
             root = self.fixture(Path(scratch) / "tf")
