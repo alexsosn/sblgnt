@@ -47,12 +47,19 @@ def scan_candidate_tf(tf_dir: Path) -> dict[str, dict]:
     if tf_dir.is_symlink() or not tf_dir.is_dir():
         raise ValueError("missing or symlinked candidate TF directory")
     paths = list(tf_dir.iterdir())
+    feature_paths = []
     for path in paths:
         if path.is_symlink():
             raise ValueError(f"symlink prohibited in source candidate: {path.name}")
+        # Fabric creates .tf/ internal load-cache metadata in source dirs.
+        # It is not part of a distributable TF feature inventory and MUST
+        # NOT enter the manifest or a future release archive.
+        if path.name == ".tf" and path.is_dir():
+            continue
         if not path.is_file():
             raise ValueError(f"unexpected nonfile in TF feature inventory: {path.name}")
-    names = {p.name for p in paths}
+        feature_paths.append(path)
+    names = {p.name for p in feature_paths}
     expected = {name + ".tf" for name in EXPECTED_TF_FEATURES}
     if names != expected:
         raise ValueError(

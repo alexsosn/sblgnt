@@ -65,3 +65,14 @@ CC BY-SA 3.0 parsing/lemma obligations and Faithlife's CC BY 4.0
 official text, but the MorphGNT snapshot still points to a historic
 SBLGNT EULA. This is unresolved under #16. No release asset is
 authorized at this stage. For published app integration see #17.
+
+## Native Text-Fabric cache boundary
+
+Real full-source CI run 38246895830 confirmed that Text-Fabric writes
+a separate internal `.tf/` cache directory alongside its flat
+`*.tf` features. The integrity inventory intentionally **ignores
+only** that named directory: it is neither a source feature nor
+part of the candidate manifest or any prospective release archive.
+Other directories (including other hidden ones), symlinks, and
+unexpected files still fail. The 23 top-level `*.tf` files alone
+define the byte-reproducibility and SHA-256 contract.

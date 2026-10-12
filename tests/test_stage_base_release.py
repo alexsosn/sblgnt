@@ -61,6 +61,26 @@ class LocalCandidateTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "inventory|unexpected|missing"):
                     scan_candidate_tf(root)
 
+    def test_only_real_tf_internal_cache_is_excluded_from_feature_hashes(self):
+        with TemporaryDirectory() as scratch:
+            root = self.fixture(Path(scratch) / "tf")
+            (root / ".tf").mkdir()
+            (root / ".tf" / "cache-data.bin").write_bytes(b"not a feature")
+            expected = {name + ".tf" for name in EXPECTED_TF_FEATURES}
+            self.assertEqual(set(scan_candidate_tf(root)), expected)
+            (root / ".tf").rename(root / ".anything")
+            with self.assertRaisesRegex(ValueError, "unexpected nonfile"):
+                scan_candidate_tf(root)
+
+    def test_internal_tf_cache_symlink_is_rejected(self):
+        with TemporaryDirectory() as scratch:
+            root = self.fixture(Path(scratch) / "tf")
+            target = Path(scratch) / "external-cache"
+            target.mkdir()
+            (root / ".tf").symlink_to(target, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                scan_candidate_tf(root)
+
     def test_symlink_alias_is_never_treated_as_source_feature(self):
         with TemporaryDirectory() as scratch:
             root = self.fixture(Path(scratch) / "tf")
