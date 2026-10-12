@@ -114,5 +114,64 @@ class UpstreamDriftTests(unittest.TestCase):
         )
 
 
+    def test_realistic_rest_tree_api_payload_is_requested_recursively(self):
+        from scripts.upstream_drift import read_live_snapshots
+
+        stems = ("Matt", "Mark", "Luke", "John", "Acts", "Rom",
+                 "1Cor", "2Cor", "Gal", "Eph", "Phil", "Col",
+                 "1Thess", "2Thess", "1Tim", "2Tim", "Titus",
+                 "Phlm", "Heb", "Jas", "1Pet", "2Pet",
+                 "1John", "2John", "3John", "Jude", "Rev")
+        paths = [
+            f"{prefix}{stem}.{ext}" for prefix, ext in (
+                ("data/sblgnt/text/", "txt"),
+                ("data/sblgnt/xml/", "xml"),
+                ("data/sblgntapp/text/", "txt"),
+                ("data/sblgntapp/xml/", "xml"),
+            ) for stem in stems
+        ]
+        paths.append("data/sblgnt/xml/sblgnt.xml")
+
+        class RecordedReadOnlyClient:
+            def __init__(self):
+                self.calls = []
+
+            def get(self, resource):
+                self.calls.append(resource)
+                for repo, lock in LOCKS.items():
+                    prefix = f"/repos/{repo}/"
+                    if resource == prefix + "branches/" + lock["branch"]:
+                        return {"commit": {"sha": lock["sha"]}}
+                    if resource == prefix + f"git/trees/{lock['sha']}?recursive=1":
+                        if repo == "Faithlife/SBLGNT":
+                            names = paths
+                        elif repo == "morphgnt/sblgnt":
+                            names = [f"{n:02d}-Mt-morphgnt.txt"
+                                     for n in range(61, 88)]
+                        else:
+                            names = ["README.md"]
+                        return {
+                            "truncated": False,
+                            "tree": [
+                                {"path": name, "type": "blob", "sha": "a"*40}
+                                for name in names
+                            ],
+                        }
+                for number in ERRATA:
+                    if resource == f"/repos/morphgnt/sblgnt/issues/{number}":
+                        return {"state": "open", "title": f"Erratum #{number}",
+                                "updated_at": "2026-10-12T00:00:00Z"}
+                raise AssertionError("unplanned/possibly mutating API call: " + resource)
+
+        client = RecordedReadOnlyClient()
+        refs, issues, inventory = read_live_snapshots(client)
+        report = compare_snapshots(refs, issues)
+        self.assertFalse(report["any_source_drift"])
+        self.assertEqual(len(client.calls), 12)
+        self.assertEqual(sum("?recursive=1" in call for call in client.calls), 3)
+        self.assertEqual(inventory["Faithlife/SBLGNT"]["books_per_family"], 27)
+        self.assertEqual(inventory["morphgnt/sblgnt"]["morphgnt_source_files"], 27)
+
+
 if __name__ == "__main__":
     unittest.main()
