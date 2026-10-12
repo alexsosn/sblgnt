@@ -45,6 +45,8 @@ jobs:
           python-version: "3.12"
       - name: Run all converter and audit tests
         run: python -m unittest discover -s tests -v
+      - name: Audit exact-source rights and artifact approval gate (no publication)
+        run: python -m scripts.release_rights --mode audit --report "$RUNNER_TEMP/source-rights-audit.json"
       - name: Guard inherited 31-feature lineage inventory
         run: python -m scripts.feature_provenance --tf-dir tf/2022 --report "$RUNNER_TEMP/legacy-feature-lineage.json"
       - name: Audit exact Greek NT edition reference differences
@@ -98,6 +100,7 @@ jobs:
             ${{ runner.temp }}/legacy-2018-lexical-parity.json
             ${{ runner.temp }}/legacy-2024-lexical-parity.json
             ${{ runner.temp }}/legacy-feature-lineage.json
+            ${{ runner.temp }}/source-rights-audit.json
             ${{ runner.temp }}/faithlife-v12-reference-diff.json
             ${{ runner.temp }}/faithlife-v12-text-diff.json
             ${{ runner.temp }}/faithlife-text-tf-audit.json
