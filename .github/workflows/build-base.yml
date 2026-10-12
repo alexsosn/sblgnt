@@ -83,6 +83,10 @@ jobs:
         run: python -m scripts.build_faithlife_apparatus_tf --source-dir upstream-faithlife --output "$RUNNER_TEMP/faithlife-apparatus-tf"
       - name: Independently reload every original apparatus note and verse coordinate
         run: python -m scripts.audit_faithlife_apparatus_tf --source-dir upstream-faithlife --tf-dir "$RUNNER_TEMP/faithlife-apparatus-tf" --report "$RUNNER_TEMP/faithlife-apparatus-tf-audit.json"
+      - name: Build authoritative Faithlife XML-word TF and preserve paragraph metadata
+        run: python -m scripts.build_faithlife_xml_tf --source-dir upstream-faithlife --output "$RUNNER_TEMP/faithlife-xml-word-tf"
+      - name: Independently reload all official XML words, prefixes, suffixes and paragraphs
+        run: python -m scripts.audit_faithlife_xml_tf --source-dir upstream-faithlife --tf-dir "$RUNNER_TEMP/faithlife-xml-word-tf" --report "$RUNNER_TEMP/faithlife-xml-word-tf-audit.json"
       - name: Upload only source-free audit counts
         uses: actions/upload-artifact@v4
         if: always()
@@ -98,6 +102,7 @@ jobs:
             ${{ runner.temp }}/faithlife-v12-text-diff.json
             ${{ runner.temp }}/faithlife-text-tf-audit.json
             ${{ runner.temp }}/faithlife-xml-parity.json
+            ${{ runner.temp }}/faithlife-xml-word-tf-audit.json
             ${{ runner.temp }}/faithlife-apparatus-source.json
             ${{ runner.temp }}/faithlife-apparatus-tf-audit.json
             ${{ runner.temp }}/base-structure-audit.json
