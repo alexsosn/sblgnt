@@ -17,7 +17,12 @@ class TextSpansTests(unittest.TestCase):
         for i, match in enumerate(re.finditer(r"[^ ]+", text), 1):
             expected.append((i, match.start(), match.end(), match.group()))
         self.assertEqual(validate_token_spans(text, expected), 3)
-        self.assertNotEqual(rows, expected)
+        self.assertEqual(rows, expected)
+        self.assertEqual(validate_token_spans(text, rows), 3)
+        mutated = list(rows)
+        mutated[1] = (2, 12, 15, "⸂καὶ")
+        with self.assertRaisesRegex(ValueError, "token"):
+            validate_token_spans(text, mutated)
 
     def test_missing_extra_surface_and_offsets_are_all_rejected(self):
         text = "α  β"

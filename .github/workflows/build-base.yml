@@ -1,5 +1,11 @@
 name: Build pinned MorphGNT base TF
 
+# Only obsolete runs for the same PR are cancelled. Each push/manual run
+# has its own run ID to avoid disrupting release and diagnostic validation.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 on:
   push:
     branches: [main]
@@ -81,8 +87,8 @@ jobs:
             ${{ runner.temp }}/legacy-2024-lexical-parity.json
             ${{ runner.temp }}/legacy-feature-lineage.json
             ${{ runner.temp }}/faithlife-v12-reference-diff.json
-            ${{ runner.temp }}/faithlife-text-tf-audit.json
             ${{ runner.temp }}/faithlife-v12-text-diff.json
+            ${{ runner.temp }}/faithlife-text-tf-audit.json
             ${{ runner.temp }}/base-structure-audit.json
             ${{ runner.temp }}/base-token-parity.json
             ${{ runner.temp }}/base-all-fields-audit.json

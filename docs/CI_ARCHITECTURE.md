@@ -17,3 +17,24 @@ Real CI then executes the exact pinned 27-book dataset build, rechecks 137,554 w
 
 ## Limits
 These changes reduce **runner/job duplication**, not necessarily total raw corpus validation CPU time, since each independent check is deliberately retained. They do not alter the native TF data, source edition decisions, permissions or redistribution policy. Manual audit workflows remain available but are not separate required PR status checks.
+
+## Concurrency isolation (#20)
+
+The required `source-base` check still runs for every newly pushed PR
+head. Workflow-level GitHub Actions concurrency uses the combination of
+workflow name, event name and pull-request number for PR events. Only
+a new run **for the same PR** cancels the older queued/running run;
+independent PRs have different numeric IDs.
+
+For `push` and `workflow_dispatch` events, a distinct
+`github.run_id` participates in the concurrency group, and
+`cancel-in-progress` is false. Consequently neither an unrelated
+pull request nor an ad-hoc audit can cancel a default-branch validation
+or a separately requested manual diagnosis. Do not replace these
+event-specific group keys with `github.ref` or `github.head_ref`
+without reviewing fork/ref collisions and release checks.
+
+The test `tests/test_workflow_concurrency.py` protects these exact
+isolation and gate-preservation requirements. The CI history should
+be inspected after changes to verify a superseded PR run is cancelled,
+and only the latest PR SHA's successful check is used for merging.
