@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from scripts.build_base_tf import SourceWord, iter_source_words, validate_destination, publish_directory_no_replace
+from scripts.build_base_tf import SourceWord, iter_source_words, validate_destination, publish_directory_no_replace, strip_volatile_tf_timestamps
 
 
 class SourceParserTests(unittest.TestCase):
@@ -57,6 +57,40 @@ class SourceParserTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             with self.assertRaisesRegex(ValueError, "empty book"):
                 self.sample(Path(directory), "", "020101 N- ----NSM- β β β β\n")
+
+    def test_generated_tf_metadata_timestamps_are_removed_without_touching_data(self):
+        with TemporaryDirectory() as scratch:
+            base = Path(scratch)
+            header = (
+                "@node\n@Name=Source candidate\n"
+                "@dateWritten=2026-10-12T12:10:30Z\n"
+                "@writtenBy=Text-Fabric\n\n"
+                "1-2\tword\n3\t@dateWritten=Greek source body text\n"
+            )
+            (base / "otype.tf").write_text(header, encoding="utf-8")
+            (base / "otext.tf").write_text(
+                "@config\n@dateWritten=2026-10-12T12:10:30Z\n",
+                encoding="utf-8"
+            )
+            self.assertEqual(strip_volatile_tf_timestamps(base), 2)
+            result = (base / "otype.tf").read_text(encoding="utf-8")
+            self.assertNotIn("@dateWritten=2026-10-12T12:10:30Z", result)
+            self.assertIn("@writtenBy=Text-Fabric", result)
+            self.assertIn("3\t@dateWritten=Greek source body text", result)
+            self.assertTrue((base / "otext.tf").read_text(encoding="utf-8").startswith("@config"))
+
+    def test_duplicate_or_missing_tf_write_timestamp_fails_closed(self):
+        with TemporaryDirectory() as scratch:
+            base = Path(scratch)
+            (base / "otype.tf").write_text(
+                "@node\n@dateWritten=A\n@dateWritten=B\n\n1\tword\n",
+                encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "dateWritten"):
+                strip_volatile_tf_timestamps(base)
+            (base / "otype.tf").write_text("@node\n\n1\tword\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "dateWritten"):
+                strip_volatile_tf_timestamps(base)
 
     def test_output_must_not_preexist(self):
         with TemporaryDirectory() as directory:
