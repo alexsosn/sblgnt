@@ -21,7 +21,7 @@ def cli(tf_dir: Path, edition: str, book: str, chapter: int, verse: int):
     if completed.returncode:
         raise AssertionError(
             f"local TF user CLI failed for {edition} {book} {chapter}:{verse} "
-            f"(exit {completed.returncode}): {completed.stderr[:250]}"
+            f"(exit {completed.returncode})"
         )
     return json.loads(completed.stdout)
 
