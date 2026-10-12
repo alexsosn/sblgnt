@@ -89,6 +89,12 @@ jobs:
         run: python -m scripts.build_faithlife_xml_tf --source-dir upstream-faithlife --output "$RUNNER_TEMP/faithlife-xml-word-tf"
       - name: Independently reload all official XML words, prefixes, suffixes and paragraphs
         run: python -m scripts.audit_faithlife_xml_tf --source-dir upstream-faithlife --tf-dir "$RUNNER_TEMP/faithlife-xml-word-tf" --report "$RUNNER_TEMP/faithlife-xml-word-tf-audit.json"
+      - name: Independently regenerate exact MorphGNT 2024 base for byte-reproducibility
+        run: python -m scripts.build_base_tf --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --output "$RUNNER_TEMP/sblgnt-generated-repeat"
+      - name: Verify all 23 TF feature bytes and source-only release-candidate provenance
+        run: python -m scripts.stage_base_release --tf-dir "$RUNNER_TEMP/sblgnt-generated" --compare-tf-dir "$RUNNER_TEMP/sblgnt-generated-repeat" --manifest-output "$RUNNER_TEMP/morphgnt-base-local-candidate.json"
+      - name: Independently recheck candidate hashes and fail-closed distribution metadata
+        run: python -m scripts.stage_base_release --tf-dir "$RUNNER_TEMP/sblgnt-generated" --verify-manifest "$RUNNER_TEMP/morphgnt-base-local-candidate.json"
       - name: Upload only source-free audit counts
         uses: actions/upload-artifact@v4
         if: always()
@@ -101,6 +107,7 @@ jobs:
             ${{ runner.temp }}/legacy-2024-lexical-parity.json
             ${{ runner.temp }}/legacy-feature-lineage.json
             ${{ runner.temp }}/source-rights-audit.json
+            ${{ runner.temp }}/morphgnt-base-local-candidate.json
             ${{ runner.temp }}/faithlife-v12-reference-diff.json
             ${{ runner.temp }}/faithlife-v12-text-diff.json
             ${{ runner.temp }}/faithlife-text-tf-audit.json
