@@ -16,6 +16,8 @@ class UpstreamWatchWorkflowTests(unittest.TestCase):
         self.assertIn('scripts/upstream_drift.py', text)
         self.assertIn('tests/test_upstream_drift.py', text)
         self.assertIn('tests/test_upstream_drift_workflow.py', text)
+        self.assertIn("github.event.pull_request.number || github.run_id", text)
+        self.assertIn("cancel-in-progress: ${{ github.event_name == 'pull_request' }}", text)
         self.assertIn("contents: read", text)
         self.assertIn("issues: read", text)
         self.assertIn("python -m scripts.upstream_drift", text)

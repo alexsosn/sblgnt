@@ -65,3 +65,12 @@ the single mandatory `source-base` CI gate for normal development.
 The watcher emits only GitHub metadata and cannot update upstream
 issues, sources or pins. Its full live-run result must also pass on
 the exact watcher PR head before that PR is merged.
+
+## Scoped workflow concurrency
+
+Like the required pinned base workflow, this watcher only cancels an
+outdated run when a **new head of the same PR** arrives. Manual and
+scheduled checks have unique run IDs and cannot be cancelled by
+unrelated PR activity. Independent pull requests have different
+numeric PR IDs. This prevents repeated code/test tweaks to the
+watcher itself from blocking the newest live metadata verification.

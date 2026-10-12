@@ -17,8 +17,9 @@ permissions:
   issues: read
 
 concurrency:
-  group: upstream-source-metadata-watch
-  cancel-in-progress: false
+  # Superseded heads of the SAME PR may cancel; manual/scheduled runs remain unique.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   upstream-drift:
