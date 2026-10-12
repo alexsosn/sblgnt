@@ -80,13 +80,23 @@ class EditionVerseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
             sha = EDITIONS["morphgnt"]["source_commit"]
-            (root / "otext.tf").write_text("@config\n@sourceCommit=" + sha + "\n\n", encoding="utf-8")
+            (root / "otext.tf").write_text("@config\n@sourceCommit=" + sha + "\n@Converter=" + EDITIONS["morphgnt"]["converter"] + "\n\n", encoding="utf-8")
             validate_source_pin(root, "morphgnt")
             with self.assertRaisesRegex(ValueError, "edition.*source|source.*edition"):
                 validate_source_pin(root, "faithlife-text")
             (root / "otext.tf").write_text("@config\n@sourceCommit=" + sha + "junk\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "source"):
                 validate_source_pin(root, "morphgnt")
+            # Faithlife sub-editions share the source SHA but not slot semantics.
+            faith_sha = EDITIONS["faithlife-text"]["source_commit"]
+            (root / "otext.tf").write_text(
+                "@config\n@sourceCommit=" + faith_sha +
+                "\n@Converter=" + EDITIONS["faithlife-text"]["converter"] + "\n\n",
+                encoding="utf-8",
+            )
+            validate_source_pin(root, "faithlife-text")
+            with self.assertRaisesRegex(ValueError, "edition"):
+                validate_source_pin(root, "faithlife-apparatus")
             (root / "otext.tf").unlink()
             outside = root / "other.tf"
             outside.write_text("anything", encoding="utf-8")
