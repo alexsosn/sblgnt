@@ -1,0 +1,43 @@
+name: Read-only upstream source drift
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/watch-upstreams.yml"
+      - "scripts/upstream_drift.py"
+      - "tests/test_upstream_drift.py"
+      - "tests/test_upstream_drift_workflow.py"
+  schedule:
+    - cron: "17 7 * * 1"
+
+# Upstream source watcher uses GitHub REST GET only, never opens/issues/merges PRs.
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  # Superseded heads of the SAME PR may cancel; manual/scheduled runs remain unique.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  upstream-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compare pinned upstream Git trees and unresolved errata (read only)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m scripts.upstream_drift --report "$RUNNER_TEMP/upstream-drift-metadata.json"
+      - name: Retain metadata-only drift report even on source change
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-drift-metadata
+          path: ${{ runner.temp }}/upstream-drift-metadata.json
+          if-no-files-found: ignore
