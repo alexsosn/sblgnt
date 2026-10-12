@@ -51,6 +51,8 @@ jobs:
         run: python -m scripts.compare_faithlife_refs --morphgnt-dir upstream-morphgnt --faithlife-dir upstream-faithlife --report "$RUNNER_TEMP/faithlife-v12-reference-diff.json"
       - name: Audit all shared Greek NT verse readings across editions
         run: python -m scripts.compare_faithlife_text --morphgnt-dir upstream-morphgnt --faithlife-dir upstream-faithlife --report "$RUNNER_TEMP/faithlife-v12-text-diff.json"
+      - name: Independently verify all 27 official XML book structures and reconstruct Greek verses
+        run: python -m scripts.faithlife_xml --source-dir upstream-faithlife --report "$RUNNER_TEMP/faithlife-xml-parity.json"
       - name: Install pinned Text-Fabric
         run: python -m pip install text-fabric==13.1.0
       - name: Audit historical TF 2022 structure
@@ -89,6 +91,7 @@ jobs:
             ${{ runner.temp }}/faithlife-v12-reference-diff.json
             ${{ runner.temp }}/faithlife-v12-text-diff.json
             ${{ runner.temp }}/faithlife-text-tf-audit.json
+            ${{ runner.temp }}/faithlife-xml-parity.json
             ${{ runner.temp }}/base-structure-audit.json
             ${{ runner.temp }}/base-token-parity.json
             ${{ runner.temp }}/base-all-fields-audit.json
