@@ -18,16 +18,20 @@ from scripts.compare_morphgnt import MORPHGNT_COMMIT
 EDITIONS = {
     "morphgnt": {"source_commit": MORPHGNT_COMMIT,
                  "features": "book chapter verse text lemma morphology",
-                 "slot": "word", "slot_kind": "morphgnt-word"},
+                 "slot": "word", "slot_kind": "morphgnt-word",
+                 "converter": "alexsosn/sblgnt:scripts/build_base_tf.py"},
     "faithlife-text": {"source_commit": FAITHLIFE_COMMIT,
                        "features": "book chapter verse source_text surface",
-                       "slot": "token", "slot_kind": "orthographic-token"},
+                       "slot": "token", "slot_kind": "orthographic-token",
+                       "converter": "alexsosn/sblgnt:scripts/build_faithlife_text_tf.py"},
     "faithlife-xml": {"source_commit": FAITHLIFE_COMMIT,
                       "features": "book chapter verse source_text word prefix suffix",
-                      "slot": "word", "slot_kind": "xml-word"},
+                      "slot": "word", "slot_kind": "xml-word",
+                      "converter": "alexsosn/sblgnt:scripts/build_faithlife_xml_tf.py"},
     "faithlife-apparatus": {"source_commit": FAITHLIFE_COMMIT,
                             "features": "book chapter verse note_text",
-                            "slot": "note", "slot_kind": "apparatus-note"},
+                            "slot": "note", "slot_kind": "apparatus-note",
+                            "converter": "alexsosn/sblgnt:scripts/build_faithlife_apparatus_tf.py"},
 }
 
 
@@ -50,8 +54,11 @@ def validate_source_pin(tf_dir: Path, edition: str) -> None:
             header.append(line.rstrip("\r\n"))
     commits = [line[len("@sourceCommit="):] for line in header
                if line.startswith("@sourceCommit=")]
-    if commits != [EDITIONS[edition]["source_commit"]]:
-        raise ValueError(f"edition source revision mismatch: {edition}")
+    converters = [line[len("@Converter="):] for line in header
+                  if line.startswith("@Converter=")]
+    if (commits != [EDITIONS[edition]["source_commit"]]
+            or converters != [EDITIONS[edition]["converter"]]):
+        raise ValueError(f"edition source revision or converter mismatch: {edition}")
 
 
 def inspect_api_verse(api, edition: str, book: str, chapter: int, verse: int) -> dict:
