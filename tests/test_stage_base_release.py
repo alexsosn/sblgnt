@@ -85,7 +85,7 @@ class LocalCandidateTests(unittest.TestCase):
         with TemporaryDirectory() as scratch:
             root = self.fixture(Path(scratch) / "tf")
             (root / "word.tf").write_text(
-                "@valueType=str\\n@dateWritten=2026-10-12T12:00:00Z\\n\\n1\\tα\\n",
+                "@valueType=str\n@dateWritten=2026-10-12T12:00:00Z\n\n1\tα\n",
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(ValueError, "dateWritten"):
