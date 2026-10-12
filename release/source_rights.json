@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "description": "Exact-source rights and credit registry; zero asset approvals as of 2026-10-12. Source review is not publication approval.",
+  "assets": {
+    "faithlife_text": {
+      "source_repo": "Faithlife/SBLGNT",
+      "source_commit": "c4d241a9c1c479a55b989ba35a4976c1d0b8052c",
+      "source_paths": [
+        "data/sblgnt/text/*.txt"
+      ],
+      "edition": "SBLGNT v1.2 plus 2025 source fixes",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "copyright": "© 2010 Society of Biblical Literature and Logos Bible Software",
+      "attribution": "SBL Greek New Testament; Michael W. Holmes, General Editor; Society of Biblical Literature and Logos Bible Software",
+      "evidence_url": "https://github.com/Faithlife/SBLGNT/blob/master/README.md",
+      "scope_note": "README explicitly grants CC BY 4.0 for SBLGNT. Exact MorphGNT source text association and release notice still require review.",
+      "modifications": "Faithlife source v1.2 adds John 7:53–8:11; pinned 2025 revision adjusts source whitespace; TF generated from source.",
+      "status": "pending",
+      "approval": null
+    },
+    "faithlife_xml_presentation": {
+      "source_repo": "Faithlife/SBLGNT",
+      "source_commit": "c4d241a9c1c479a55b989ba35a4976c1d0b8052c",
+      "source_paths": [
+        "data/sblgnt/xml/*.xml"
+      ],
+      "edition": "SBLGNT v1.2 official XML",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "copyright": "© 2010 Society of Biblical Literature and Logos Bible Software",
+      "attribution": "Official SBLGNT XML editorial, prefix/suffix and paragraph structure; Michael W. Holmes, General Editor; SBL and Logos Bible Software",
+      "evidence_url": "https://github.com/Faithlife/SBLGNT/blob/master/README.md",
+      "scope_note": "Edition-level CC BY 4.0 is documented; XML-specific formatting/artifacts are not separately enumerated in the README. Confirm source family scope before distribution.",
+      "modifications": "XML element structure converted to native Text-Fabric word and paragraph features; word-equivalence to MorphGNT not asserted.",
+      "status": "pending",
+      "approval": null
+    },
+    "faithlife_apparatus": {
+      "source_repo": "Faithlife/SBLGNT",
+      "source_commit": "c4d241a9c1c479a55b989ba35a4976c1d0b8052c",
+      "source_paths": [
+        "data/sblgntapp/xml/*.xml",
+        "data/sblgntapp/text/*.txt"
+      ],
+      "edition": "SBLGNT v1.2 official critical apparatus",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "copyright": "© 2010 Society of Biblical Literature and Logos Bible Software",
+      "attribution": "SBLGNT official critical apparatus; Michael W. Holmes, General Editor; SBL and Logos Bible Software",
+      "evidence_url": "https://github.com/Faithlife/SBLGNT/blob/master/README.md",
+      "scope_note": "README names SBLGNT, but does not expressly identify apparatus as a distinct CC BY 4.0 asset family. Additional affirmative scope review required.",
+      "modifications": "Raw apparatus XML notes and verse anchors converted into opaque TF note slots, preserving Unicode and whitespace.",
+      "status": "pending",
+      "approval": null
+    },
+    "morphgnt_morphology": {
+      "source_repo": "morphgnt/sblgnt",
+      "source_commit": "aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d",
+      "source_paths": [
+        "[6-8][0-9]-*-morphgnt.txt"
+      ],
+      "edition": "MorphGNT SBLGNT v6.12 plus 2024 accent corrections",
+      "license": "CC-BY-SA-3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "copyright": "MorphGNT morphosyntactic parsing and lemmas edited by James K. Tauber; third-party CCAT code lineage",
+      "attribution": "James K. Tauber, ed. (2017), MorphGNT: SBLGNT Edition, v6.12. DOI 10.5281/zenodo.376200",
+      "evidence_url": "https://github.com/morphgnt/sblgnt/blob/master/README.md",
+      "scope_note": "The morphology/lemma CC BY-SA license does not automatically cover the underlying SBLGNT Greek text; MorphGNT README still points to historic text EULA. Combined distribution/share-alike analysis required.",
+      "modifications": "Seven source fields and documented grammatical feature decoding, no invented John 7:53–8:11 morphology.",
+      "status": "pending",
+      "approval": null
+    },
+    "legacy_external_dictionary": {
+      "source_repo": null,
+      "source_commit": null,
+      "source_paths": [
+        "NA1904_dictionary_v1.0.xlsx",
+        "ABC2order.xlsx"
+      ],
+      "edition": "Historical external dictionary/BibleOL enrichment (unknown inputs)",
+      "license": "UNKNOWN",
+      "license_url": null,
+      "copyright": "UNKNOWN: owner/source data not reliably identified",
+      "attribution": "Unverified external dictionary and Excel source",
+      "evidence_url": "https://github.com/alexsosn/sblgnt/blob/main/docs/FEATURE_PROVENANCE.md",
+      "scope_note": "No authoritative workbook hash or redistribution grant. MIT coverage of software does not establish permission for original lexical data.",
+      "modifications": "Historical gloss, lemma_dictform, strongs and dict_abc_order enrichments (not independently validated).",
+      "status": "blocked",
+      "approval": null
+    }
+  },
+  "candidates": {
+    "faithlife-text-v1.2": [
+      "faithlife_text"
+    ],
+    "faithlife-xml-v1.2": [
+      "faithlife_text",
+      "faithlife_xml_presentation"
+    ],
+    "faithlife-apparatus-v1.2": [
+      "faithlife_apparatus"
+    ],
+    "morphgnt-base-v6.12": [
+      "faithlife_text",
+      "morphgnt_morphology"
+    ],
+    "legacy-2022-rich": [
+      "faithlife_text",
+      "morphgnt_morphology",
+      "legacy_external_dictionary"
+    ]
+  },
+  "artifact_release_approvals": {
+    "faithlife-text-v1.2": null,
+    "faithlife-xml-v1.2": null,
+    "faithlife-apparatus-v1.2": null,
+    "morphgnt-base-v6.12": null,
+    "legacy-2022-rich": null
+  }
+}
