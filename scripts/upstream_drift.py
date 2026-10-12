@@ -189,7 +189,12 @@ class GithubReadOnly:
         self.timeout = timeout
 
     def get(self, resource: str):
-        if not resource.startswith("/repos/") or not re.fullmatch(r"[/A-Za-z0-9_.%-]+", resource):
+        plain_resource = resource.removesuffix("?recursive=1")
+        if not plain_resource.startswith("/repos/") or not re.fullmatch(
+            r"[/A-Za-z0-9_.%-]+", plain_resource
+        ):
+            raise ValueError("invalid readonly GitHub REST resource")
+        if "?" in plain_resource:
             raise ValueError("invalid readonly GitHub REST resource")
         url = "https://api.github.com" + resource
         headers = {
@@ -221,13 +226,13 @@ def read_live_snapshots(client: GithubReadOnly):
         if not isinstance(head, str) or not SHA_RE.fullmatch(head):
             raise ValueError(f"missing current HEAD sha for {repository}")
         current_tree = verify_git_tree(
-            client.get(f"/repos/{repository}/git/trees/{head}?recursive=1".replace("?recursive=1", ""))
+            client.get(f"/repos/{repository}/git/trees/{head}?recursive=1")
         )
         # GitHub GET tree path may require ?recursive=1. Keep root tree
         # traversal bounded and refuse incomplete API responses.
         if head != lock["sha"]:
             previous_tree = verify_git_tree(
-                client.get(f"/repos/{repository}/git/trees/{lock['sha']}")
+                client.get(f"/repos/{repository}/git/trees/{lock['sha']}?recursive=1")
             )
             changed_paths = sorted(
                 path for path in current_tree.keys() | previous_tree.keys()
