@@ -55,3 +55,13 @@ inspect the changed file categories and upstream release notes, create
 a targeted GitHub research ticket, check edition licenses and
 MorphGNT's planned POS/parsing-code changes, then follow the full
 research–TDD–independent-review loop before modifying pins.
+
+## Live integration checks scoped to watcher-only pull requests
+
+Pull requests touching only this watcher script, its tests, or its own
+workflow trigger an additional, read-only live source/errata check.
+Unrelated PRs do **not** acquire another watcher runner, preserving
+the single mandatory `source-base` CI gate for normal development.
+The watcher emits only GitHub metadata and cannot update upstream
+issues, sources or pins. Its full live-run result must also pass on
+the exact watcher PR head before that PR is merged.
