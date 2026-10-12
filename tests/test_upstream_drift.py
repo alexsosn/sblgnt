@@ -64,9 +64,11 @@ class UpstreamDriftTests(unittest.TestCase):
             verify_git_tree({"truncated": False, "tree": "invalid"})
         refs = {repo: {"sha": lock["sha"], "changed_paths": []}
                 for repo, lock in LOCKS.items()}
+        issues = {n: {"state": "open", "title": "tracked report",
+                      "updated_at": "2026-10-12T00:00:00Z"} for n in ERRATA}
         with self.assertRaisesRegex(ValueError, "40|SHA"):
             compare_snapshots({**refs, "Faithlife/SBLGNT": {"sha": "bad",
-                                                           "changed_paths": []}}, {})
+                                                           "changed_paths": []}}, issues)
         with self.assertRaisesRegex(ValueError, "missing|errata"):
             compare_snapshots(refs, {})
 
