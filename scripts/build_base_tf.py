@@ -120,6 +120,45 @@ def publish_directory_no_replace(stage: Path, output: Path) -> None:
         raise RuntimeError("atomic no-replace directory publication unsupported on this OS")
 
 
+def strip_volatile_tf_timestamps(stage: Path) -> int:
+    """Remove only TF's wall-clock @dateWritten feature-header records.
+
+    Text-Fabric 13.1.0 emits the current time into every one of the 23
+    TF feature files, making otherwise identical pinned-source builds
+    byte-different. The write time is not corpus provenance: the pinned
+    source revision and deterministic converter version are. Parse only
+    feature headers, never source rows; fail on unexpected timestamp shape.
+    """
+    count = 0
+    for feature in sorted(
+        path for path in stage.iterdir()
+        if path.is_file() and path.suffix == ".tf"
+    ):
+        data = feature.read_bytes()
+        new_lines = []
+        in_header = True
+        removed = 0
+        for line in data.splitlines(keepends=True):
+            bare = line.rstrip(b"\\r\\n")
+            if in_header and (bare.startswith(b"@") or not bare):
+                if bare.startswith(b"@dateWritten="):
+                    removed += 1
+                    continue
+            else:
+                in_header = False
+            new_lines.append(line)
+        if removed != 1:
+            raise ValueError(
+                f"expected exactly one @dateWritten header in {feature.name}, "
+                f"found {removed}"
+            )
+        feature.write_bytes(b"".join(new_lines))
+        count += 1
+    if not count:
+        raise ValueError("no native TF feature files to make deterministic")
+    return count
+
+
 def build_base_tf(source: Path, output: Path, *, source_commit: str) -> dict:
     """Create base TF atomically from a checked exact source revision."""
     if source_commit not in {LEGACY_COMMIT, MORPHGNT_COMMIT}:
@@ -236,6 +275,9 @@ def build_base_tf(source: Path, output: Path, *, source_commit: str) -> dict:
         )
         if not ok:
             raise RuntimeError("Text-Fabric converter rejected source")
+        # Drop TF 13.1.0's non-semantic wall-clock @dateWritten headers.
+        # Otherwise all 23 native feature files change on every rebuild.
+        strip_volatile_tf_timestamps(stage)
         # A source defect should not publish a plausible-looking partial corpus.
         publish_directory_no_replace(stage, output)
     return {**counts, "source_revision": source_commit, "status": "built_source_base_only"}
