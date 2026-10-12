@@ -26,7 +26,7 @@ class LocalCandidateTests(unittest.TestCase):
         with TemporaryDirectory() as scratch:
             root = self.fixture(Path(scratch) / "tf")
             inventory = scan_candidate_tf(root)
-            self.assertEqual(set(inventory), set(EXPECTED_TF_FEATURES))
+            self.assertEqual(set(inventory), {name + ".tf" for name in EXPECTED_TF_FEATURES})
             self.assertEqual(len(inventory), 23)
             report = create_candidate_manifest(root, text_fabric_version="13.1.0")
             self.assertEqual(report["source_commit"], SOURCE_COMMIT)
