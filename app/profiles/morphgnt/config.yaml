@@ -13,4 +13,5 @@ typeDisplay:
       - morphology
       - morph_pos
 provenanceSpec:
+  version: candidate-local
   corpus: "MorphGNT SBLGNT v6.12, pinned 2024 source (LOCAL CANDIDATE)"
