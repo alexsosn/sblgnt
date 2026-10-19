@@ -1,0 +1,17 @@
+# Local MorphGNT 2024 base only; not the inherited 2022 enriched app.
+apiVersion: 3
+writing: grc
+dataDisplay:
+  textFormat: text-orig-full
+typeDisplay:
+  book:
+    featuresBare:
+      - book
+  word:
+    featuresBare:
+      - lemma
+      - morphology
+      - morph_pos
+provenanceSpec:
+  version: candidate-local
+  corpus: "MorphGNT SBLGNT v6.12, pinned 2024 source (LOCAL CANDIDATE)"

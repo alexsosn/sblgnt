@@ -1,0 +1,18 @@
+# Local official SBLGNT v1.2 orthographic-token-only candidate.
+apiVersion: 3
+writing: grc
+dataDisplay:
+  textFormat: text-orig-full
+typeDisplay:
+  book:
+    featuresBare:
+      - title
+  verse:
+    featuresBare:
+      - source_text
+  token:
+    featuresBare:
+      - ordinal
+provenanceSpec:
+  version: candidate-local
+  corpus: "Faithlife SBLGNT v1.2 plaintext (LOCAL CANDIDATE)"
