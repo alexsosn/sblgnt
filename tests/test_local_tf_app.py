@@ -20,6 +20,8 @@ class LocalProfileTests(unittest.TestCase):
                 self.assertIn("apiVersion: 3", config)
                 self.assertIn("textFormat: text-orig-full", config)
                 self.assertNotIn("version: 2022", config)
+                # TF 13.1.0 linksApi joins version into local source path.
+                self.assertIn("version: candidate-local", config)
                 for wrong in ("gloss", "strongs", "lemma_dictform", "sentence", "clause"):
                     self.assertNotIn(wrong, config)
                 # Profile display features are a verified subset of the
