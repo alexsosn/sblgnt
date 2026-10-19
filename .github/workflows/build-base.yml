@@ -96,6 +96,13 @@ jobs:
           --faithlife-text "$RUNNER_TEMP/faithlife-text-tf"
           --faithlife-xml "$RUNNER_TEMP/faithlife-xml-word-tf"
           --faithlife-apparatus "$RUNNER_TEMP/faithlife-apparatus-tf"
+      - name: Exercise offline, edition-qualified Text-Fabric advanced-app display on real data
+        run: >-
+          python -m scripts.smoke_local_tf_apps
+          --morphgnt "$RUNNER_TEMP/sblgnt-generated"
+          --faithlife-text "$RUNNER_TEMP/faithlife-text-tf"
+          --faithlife-xml "$RUNNER_TEMP/faithlife-xml-word-tf"
+          --faithlife-apparatus "$RUNNER_TEMP/faithlife-apparatus-tf"
       - name: Independently regenerate exact MorphGNT 2024 base for byte-reproducibility
         run: python -m scripts.build_base_tf --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --output "$RUNNER_TEMP/sblgnt-generated-repeat"
       - name: Verify all 23 TF feature bytes and source-only release-candidate provenance
