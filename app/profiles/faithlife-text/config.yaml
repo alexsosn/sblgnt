@@ -14,4 +14,5 @@ typeDisplay:
     featuresBare:
       - ordinal
 provenanceSpec:
+  version: candidate-local
   corpus: "Faithlife SBLGNT v1.2 plaintext (LOCAL CANDIDATE)"
