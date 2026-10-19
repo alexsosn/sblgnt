@@ -9,6 +9,14 @@ from pathlib import Path
 
 from scripts.inspect_verse import EDITIONS, validate_source_pin
 
+class NativeTfDataLoadFailed(RuntimeError):
+    """Selected local features could not be loaded as a native TF API."""
+
+
+class AdvancedTfAppInitFailed(RuntimeError):
+    """Local advanced-app profile could not be initialized around native TF."""
+
+
 APP_FEATURES = {
     "morphgnt": "book chapter verse text lemma morphology morph_pos morph_case morph_number morph_gender",
     "faithlife-text": "book chapter verse title source_text surface ordinal",
@@ -39,15 +47,21 @@ def load_local_app(tf_dir: Path, edition: str):
     from tf.fabric import Fabric
     from tf.app import use
 
-    api = Fabric(locations=[str(tf_dir.resolve())], silent="deep").load(
-        APP_FEATURES[edition], silent="deep",
-    )
+    try:
+        api = Fabric(locations=[str(tf_dir.resolve())], silent="deep").load(
+            APP_FEATURES[edition], silent="deep",
+        )
+    except Exception:
+        raise NativeTfDataLoadFailed() from None
     if not api:
-        raise RuntimeError(f"failed to load local {edition} TF data")
+        raise NativeTfDataLoadFailed()
     expected_slot = EDITIONS[edition]["slot"]
     if api.F.otype.slotType != expected_slot:
         raise ValueError(f"unexpected slot type for {edition}")
-    app = use(f"app:{profile.resolve()}", api=api, silent="deep")
+    try:
+        app = use(f"app:{profile.resolve()}", api=api, silent="deep")
+    except Exception:
+        raise AdvancedTfAppInitFailed() from None
     if app is None or app.api is None:
-        raise RuntimeError(f"failed to load local {edition} TF advanced app")
+        raise AdvancedTfAppInitFailed()
     return app
