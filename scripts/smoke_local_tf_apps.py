@@ -11,7 +11,7 @@ from io import StringIO
 import json
 from pathlib import Path
 
-from scripts.local_tf_app import load_local_app
+from scripts.local_tf_app import load_local_app, AdvancedTfAppInitFailed
 
 
 def run_smoke(dirs: dict[str, Path]) -> dict:
@@ -50,7 +50,8 @@ def run_smoke(dirs: dict[str, Path]) -> dict:
                         raise AssertionError("invented critical apparatus note")
         except Exception as error:
             # Only a known edition/stage and exception TYPE reach public CI logs.
-            raise RuntimeError(f"{edition}/{stage}: {type(error).__name__}") from None
+            reason = f"/{error}" if isinstance(error, AdvancedTfAppInitFailed) else ""
+            raise RuntimeError(f"{edition}/{stage}: {type(error).__name__}{reason}") from None
         results[edition] = "pass"
     return {"status": "pass", "editions": results, "rendered_verses": 6}
 
