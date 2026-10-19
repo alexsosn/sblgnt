@@ -1,0 +1,19 @@
+# Local official SBLGNT v1.2 XML-word-only candidate.
+apiVersion: 3
+writing: grc
+dataDisplay:
+  textFormat: text-orig-full
+typeDisplay:
+  book:
+    featuresBare:
+      - title
+  verse:
+    featuresBare:
+      - source_text
+  word:
+    featuresBare:
+      - paragraph_ordinal
+      - prefix
+      - suffix
+provenanceSpec:
+  corpus: "Faithlife SBLGNT v1.2 XML words (LOCAL CANDIDATE)"
