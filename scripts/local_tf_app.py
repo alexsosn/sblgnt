@@ -74,7 +74,7 @@ def load_local_app(tf_dir: Path, edition: str):
         if frames:
             last = frames[-1]
             file = Path(last.filename).name
-            if re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*\\.py", file):
+            if re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*\.py", file):
                 where = f"@{file}:{last.lineno}"
         raise AdvancedTfAppInitFailed(type(error).__name__ + where) from None
     if app is None or app.api is None:
@@ -83,7 +83,7 @@ def load_local_app(tf_dir: Path, edition: str):
         trace = stream.getvalue()
         errors = re.findall(r"(?m)^([A-Za-z][A-Za-z0-9_]*(?:Error|Exception)):", trace)
         frames = re.findall(
-            r'File "[^"\\n]*/([A-Za-z_][A-Za-z_0-9]*\\.py)", line ([0-9]+), in ([A-Za-z_][A-Za-z_0-9]*)',
+            r'File "[^"\n]*/([A-Za-z_][A-Za-z_0-9]*\.py)", line ([0-9]+), in ([A-Za-z_][A-Za-z_0-9]*)',
             trace,
         )
         where = f"@{frames[-1][0]}:{frames[-1][1]}:{frames[-1][2]}" if frames else ""
