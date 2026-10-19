@@ -1,0 +1,18 @@
+# Local official SBLGNT v1.2 critical apparatus notes; sparse verses.
+apiVersion: 3
+writing: grc
+dataDisplay:
+  textFormat: text-orig-full
+typeDisplay:
+  book:
+    featuresBare:
+      - title
+  verse:
+    featuresBare:
+      - anchor_label
+  note:
+    featuresBare:
+      - note_text
+      - note_ordinal
+provenanceSpec:
+  corpus: "Faithlife SBLGNT v1.2 apparatus (LOCAL CANDIDATE)"
