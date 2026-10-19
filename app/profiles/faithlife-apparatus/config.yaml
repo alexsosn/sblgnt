@@ -15,4 +15,5 @@ typeDisplay:
       - note_text
       - note_ordinal
 provenanceSpec:
+  version: candidate-local
   corpus: "Faithlife SBLGNT v1.2 apparatus (LOCAL CANDIDATE)"
