@@ -6,6 +6,9 @@ configuration is intentionally never used for a modern source-only edition.
 from __future__ import annotations
 
 from pathlib import Path
+from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
+import re
 
 from scripts.inspect_verse import EDITIONS, validate_source_pin
 
@@ -58,10 +61,17 @@ def load_local_app(tf_dir: Path, edition: str):
     expected_slot = EDITIONS[edition]["slot"]
     if api.F.otype.slotType != expected_slot:
         raise ValueError(f"unexpected slot type for {edition}")
+    stream = StringIO()
     try:
-        app = use(f"app:{profile.resolve()}", api=api, silent="deep")
-    except Exception:
-        raise AdvancedTfAppInitFailed() from None
+        # TF 13.1 sometimes prints a traceback and returns None on app
+        # initialization failure. Keep the raw traceback out of CI logs.
+        with redirect_stdout(stream), redirect_stderr(stream):
+            app = use(f"app:{profile.resolve()}", api=api, silent="deep")
+    except Exception as error:
+        raise AdvancedTfAppInitFailed(type(error).__name__) from None
     if app is None or app.api is None:
-        raise AdvancedTfAppInitFailed()
+        # Export only an ASCII exception class, never the original source value
+        # or traceback; names remain safe even if Greek features appear there.
+        errors = re.findall(r"(?m)^([A-Za-z][A-Za-z0-9_]*(?:Error|Exception)):", stream.getvalue())
+        raise AdvancedTfAppInitFailed(errors[-1] if errors else "unknown")
     return app
