@@ -16,4 +16,5 @@ typeDisplay:
       - prefix
       - suffix
 provenanceSpec:
+  version: candidate-local
   corpus: "Faithlife SBLGNT v1.2 XML words (LOCAL CANDIDATE)"
