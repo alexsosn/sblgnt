@@ -72,6 +72,12 @@ def load_local_app(tf_dir: Path, edition: str):
     if app is None or app.api is None:
         # Export only an ASCII exception class, never the original source value
         # or traceback; names remain safe even if Greek features appear there.
-        errors = re.findall(r"(?m)^([A-Za-z][A-Za-z0-9_]*(?:Error|Exception)):", stream.getvalue())
-        raise AdvancedTfAppInitFailed(errors[-1] if errors else "unknown")
+        trace = stream.getvalue()
+        errors = re.findall(r"(?m)^([A-Za-z][A-Za-z0-9_]*(?:Error|Exception)):", trace)
+        frames = re.findall(
+            r'File "[^"\\n]*/([A-Za-z_][A-Za-z_0-9]*\\.py)", line ([0-9]+), in ([A-Za-z_][A-Za-z_0-9]*)',
+            trace,
+        )
+        where = f"@{frames[-1][0]}:{frames[-1][1]}:{frames[-1][2]}" if frames else ""
+        raise AdvancedTfAppInitFailed((errors[-1] if errors else "unknown") + where)
     return app
