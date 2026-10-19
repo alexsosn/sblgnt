@@ -11,7 +11,7 @@ from io import StringIO
 import json
 from pathlib import Path
 
-from scripts.local_tf_app import load_local_app, AdvancedTfAppInitFailed
+from scripts.local_tf_app import load_local_app
 
 
 def run_smoke(dirs: dict[str, Path]) -> dict:
@@ -20,7 +20,7 @@ def run_smoke(dirs: dict[str, Path]) -> dict:
         stage = "profile-load"
         try:
             # Keep Text-Fabric's display, load messages and any failure diagnostics
-        # out of CI logs, which are uploaded independently of corpus rights.
+            # out of CI logs, which are uploaded independently of corpus rights.
             with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
                 app = load_local_app(dirs[edition], edition)
                 stage = "native-book-section"
@@ -50,8 +50,7 @@ def run_smoke(dirs: dict[str, Path]) -> dict:
                         raise AssertionError("invented critical apparatus note")
         except Exception as error:
             # Only a known edition/stage and exception TYPE reach public CI logs.
-            reason = f"/{error}" if isinstance(error, AdvancedTfAppInitFailed) else ""
-            raise RuntimeError(f"{edition}/{stage}: {type(error).__name__}{reason}") from None
+            raise RuntimeError(f"{edition}/{stage}: {type(error).__name__}") from None
         results[edition] = "pass"
     return {"status": "pass", "editions": results, "rendered_verses": 6}
 
