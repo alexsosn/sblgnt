@@ -46,8 +46,8 @@ class LocalProfileTests(unittest.TestCase):
             sha = EDITIONS["morphgnt"]["source_commit"]
             converter = EDITIONS["morphgnt"]["converter"]
             (corpus / "otext.tf").write_text(
-                "@config\\n@sourceCommit=" + sha +
-                "\\n@Converter=" + converter + "\\n\\n",
+                "@config\n@sourceCommit=" + sha +
+                "\n@Converter=" + converter + "\n\n",
                 encoding="utf-8",
             )
             api = SimpleNamespace(F=SimpleNamespace(
@@ -83,8 +83,8 @@ class LocalProfileTests(unittest.TestCase):
             corpus = Path(scratch)
             spec = EDITIONS["faithlife-apparatus"]
             (corpus / "otext.tf").write_text(
-                "@config\\n@sourceCommit=" + spec["source_commit"] +
-                "\\n@Converter=" + spec["converter"] + "\\n\\n",
+                "@config\n@sourceCommit=" + spec["source_commit"] +
+                "\n@Converter=" + spec["converter"] + "\n\n",
                 encoding="utf-8",
             )
             api = SimpleNamespace(F=SimpleNamespace(
