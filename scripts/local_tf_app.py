@@ -9,6 +9,7 @@ from pathlib import Path
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 import re
+import traceback
 
 from scripts.inspect_verse import EDITIONS, validate_source_pin
 
@@ -68,7 +69,14 @@ def load_local_app(tf_dir: Path, edition: str):
         with redirect_stdout(stream), redirect_stderr(stream):
             app = use(f"app:{profile.resolve()}", api=api, silent="deep")
     except Exception as error:
-        raise AdvancedTfAppInitFailed(type(error).__name__) from None
+        frames = traceback.extract_tb(error.__traceback__)
+        where = ""
+        if frames:
+            last = frames[-1]
+            file = Path(last.filename).name
+            if re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*\\.py", file):
+                where = f"@{file}:{last.lineno}"
+        raise AdvancedTfAppInitFailed(type(error).__name__ + where) from None
     if app is None or app.api is None:
         # Export only an ASCII exception class, never the original source value
         # or traceback; names remain safe even if Greek features appear there.
