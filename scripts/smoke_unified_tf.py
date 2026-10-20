@@ -6,6 +6,7 @@ from pathlib import Path
 import json
 import time
 import tracemalloc
+from textwrap import dedent
 
 from scripts.build_unified_tf import build_unified_tf, COUNTS
 
@@ -49,20 +50,24 @@ def smoke_unified(morphgnt: Path, faithlife: Path, output: Path):
 
     # One actual native TF query joins MorphGNT and official apparatus
     # as siblings under a shared canonical reference. This is NOT token identity.
-    query = """
-    book book=Mark
-      chapter chapter=1
-        verse verse=1
-          morph_word morph_lemma=ἀρχή
-          apparatus_note
-    """
+    query = dedent("""\
+        book book=Mark
+          chapter chapter=1
+            verse verse=1
+              morph_word morph_lemma=ἀρχή
+              apparatus_note
+    """).strip()
     began = time.monotonic()
     hits = api.S.search(query)
     query_ms = (time.monotonic() - began) * 1000
     if not hits or any(api.T.sectionFromNode(h[2]) != ("Mark", 1, 1) for h in hits):
         raise AssertionError("single joined TF search did not return expected Mark 1:1")
     # A deliberately impossible reference-scoped query should not match.
-    negative = api.S.search(query.replace("book=Mark", "book=John"))
+    negative = api.S.search(
+        query.replace("book=Mark", "book=John")
+             .replace("chapter=1", "chapter=7")
+             .replace("verse=1", "verse=53")
+    )
     if negative:
         raise AssertionError("cross-verse or cross-book false-positive")
     # No XML or JSON blob-valued node features, native nodes for all layers.
