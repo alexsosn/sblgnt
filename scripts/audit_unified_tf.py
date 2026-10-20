@@ -28,7 +28,7 @@ def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
         xml_word_text xml_word_ordinal xml_paragraph_ordinal
         xml_prefix_text xml_suffix_text xml_suffix_present
         xml_paragraph_empty xml_verse_id xml_verse_label
-        apparatus_note_text apparatus_note_ordinal apparatus_anchor_label
+        apparatus_note_text apparatus_note_ordinal apparatus_anchor_label apparatus_anchor_ordinal
         publication_section publication_ordinal publication_text
         publication_link_href publication_link_text
         """, silent="deep")
@@ -130,12 +130,14 @@ def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
             (source / "sblgntapp" / "xml" / f"{stem}.xml").read_text(encoding="utf-8-sig"),
             book,
         )
-        for anchor in appar.anchors:
+        for anchor_index, anchor in enumerate(appar.anchors, 1):
             ref = (book, anchor.ref[1], anchor.ref[2])
             node = api.T.nodeFromSection(ref)
             notes = api.L.d(node, otype="apparatus_note")
             native_anchors = api.L.d(node, otype="apparatus_anchor")
-            if len(native_anchors) != 1 or api.F.apparatus_anchor_label.v(native_anchors[0]) != anchor.label:
+            if (len(native_anchors) != 1 or
+                    api.F.apparatus_anchor_label.v(native_anchors[0]) != anchor.label or
+                    api.F.apparatus_anchor_ordinal.v(native_anchors[0]) != anchor_index):
                 raise ValueError(f"apparatus anchor missing/wrong at {ref}")
             if len(notes) != len(anchor.notes):
                 raise ValueError(f"apparatus note count mismatch at {ref}")
