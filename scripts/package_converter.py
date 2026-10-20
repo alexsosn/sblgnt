@@ -82,7 +82,7 @@ def _canonical_archive_bytes(files):
             for name, data in files.items():
                 archive.writestr(_zipinfo(name), data, compresslevel=9)
             manifest = _manifest(files)
-            payload = (json.dumps(manifest, sort_keys=True, indent=2) + "\\n").encode()
+            payload = (json.dumps(manifest, sort_keys=True, indent=2) + "\n").encode()
             archive.writestr(_zipinfo(MANIFEST), payload, compresslevel=9)
         return stream.getvalue()
 
