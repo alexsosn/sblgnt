@@ -25,8 +25,8 @@ EDITIONS = {
                        "slot": "token", "slot_kind": "orthographic-token",
                        "converter": "alexsosn/sblgnt:scripts/build_faithlife_text_tf.py"},
     "faithlife-xml": {"source_commit": FAITHLIFE_COMMIT,
-                      "features": "book chapter verse source_text word prefix suffix",
-                      "slot": "word", "slot_kind": "xml-word",
+                      "features": "book chapter verse source_text word prefix suffix unit_kind paragraph_empty",
+                      "slot": "unit", "slot_kind": "xml-word",
                       "converter": "alexsosn/sblgnt:scripts/build_faithlife_xml_tf.py"},
     "faithlife-apparatus": {"source_commit": FAITHLIFE_COMMIT,
                             "features": "book chapter verse note_text",
@@ -95,9 +95,12 @@ def inspect_api_verse(api, edition: str, book: str, chapter: int, verse: int) ->
         result["text"] = api.F.source_text.v(node)
         result["text_fidelity"] = "source-exact"  # excludes separately tracked terminal line padding
     elif edition == "faithlife-xml":
-        result["tokens"] = [{"word": api.F.word.v(slot),
-                              "prefix": api.F.prefix.v(slot) or "",
-                              "suffix": api.F.suffix.v(slot) or ""} for slot in slots]
+        words = api.L.d(node, otype="xml_word")
+        if len(words) != len(slots):
+            raise ValueError("unexpected non-lexical slot inside XML scripture verse")
+        result["tokens"] = [{"word": api.F.word.v(word),
+                              "prefix": api.F.prefix.v(word) or "",
+                              "suffix": api.F.suffix.v(word) or ""} for word in words]
         result["text"] = api.F.source_text.v(node)
         result["text_fidelity"] = "source-exact"
     else:
