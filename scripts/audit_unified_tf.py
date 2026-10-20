@@ -49,6 +49,12 @@ def assert_no_volatile_headers(tf_dir: Path):
     """Reject TF writer clock metadata without reading source text payloads."""
     count = 0
     for path in tf_dir.glob("*.tf"):
+        # Text-Fabric's internal load cache is itself a directory called
+        # ".tf", which glob("*.tf") also matches in Python 3.12.
+        if path.name == ".tf" and path.is_dir() and not path.is_symlink():
+            continue
+        if path.is_symlink() or not path.is_file():
+            raise ValueError("unexpected nonfile or symlink in native TF feature inventory")
         count += 1
         with path.open("rb") as stream:
             for line in stream:
