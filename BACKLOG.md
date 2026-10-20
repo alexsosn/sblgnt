@@ -1,5 +1,13 @@
 # Maintenance backlog
 
+## Current release target: converter-only software (2026-10-20)
+- [x] Decide to ship source converters/CLI/local app profiles and documentation, **not generated TF datasets**; source-data redistribution approvals are not a software release gate.
+- [ ] Issue #31: deterministic allowlisted ZIP, manifest/checksums, independent CI package verification and adversarial review (in progress).
+- [ ] Issue #33: separate migration of the 31 legacy `tf/2022` tracked data files and dependent tests so GitHub's auto-generated source archives can also become code-only.
+- [ ] Add stable converter version/entrypoints and end-user download documentation; keep pinned real-source conversion/TF smoke as quality gate.
+- [ ] Optional data artifacts (#10, #13, #14, #16) are **out of scope for converter software publication**.
+
+
 GitHub Issues are currently disabled in this fork (GitHub API returns HTTP 410). This file tracks planned work until Issues are enabled. Canonical Coptic integration tracking: [CopticScriptorium-TF #93](https://github.com/alexsosn/CopticScriptorium-TF/issues/93).
 
 ## P0 — Validate legacy parent (merged PR #1)
