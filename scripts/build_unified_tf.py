@@ -147,12 +147,13 @@ def emit_native_node(cv, name, layer, text, features=None):
     return node
 
 
-def emit_unified_book(cv, book, rows, xml_book, markers, counters):
+def emit_unified_book(cv, book, rows, xml_book, markers, counters, apparatus_title):
     """Emit scripture sections and every source-layer unit in one shared warp."""
     if [ref for ref, _, _ in markers] != [row.plain.ref for row in rows]:
         raise ValueError("XML verse marker and plaintext references differ")
     book_node = cv.node("book")
     cv.feature(book_node, book=book, faithlife_title=xml_book.title,
+               apparatus_book_title=apparatus_title,
                xml_book_id=xml_book.book_id, xml_paragraph_total=xml_book.paragraph_count)
     counters["book"] += 1
     chapter_node = None
@@ -311,7 +312,7 @@ def build_unified_tf(morph_root: Path, faith_root: Path, output: Path, *,
             raw_app = (root / "sblgntapp" / "xml" / f"{stem}.xml").read_text(encoding="utf-8-sig")
             appar = parse_apparatus_book(raw_app, book)
             rows = combine_verse_rows(book, plains_by_book[book], parsed, appar, morph)
-            emit_unified_book(cv, book, rows, parsed, markers, counts)
+            emit_unified_book(cv, book, rows, parsed, markers, counts, appar.title)
         pub = (root / "sblgnt" / "xml" / "sblgnt.xml").read_text(encoding="utf-8-sig")
         emit_publication(cv, parse_publication(pub), counts)
         if require_full:
@@ -323,7 +324,7 @@ def build_unified_tf(morph_root: Path, faith_root: Path, output: Path, *,
     # These are source-qualified columns on nodes; no XML/JSON/b64 content.
     native_fields = {
         "book", "chapter", "verse", "unit_layer", "unit_display",
-        "faithlife_title", "faithlife_text", "faithlife_trailing_spaces",
+        "faithlife_title", "apparatus_book_title", "faithlife_text", "faithlife_trailing_spaces",
         "xml_book_id", "xml_paragraph_total", "xml_verse_id",
         "xml_verse_label", "xml_paragraph_ordinal", "xml_paragraph_empty",
         "xml_word_text", "xml_word_ordinal", "xml_prefix_text",
