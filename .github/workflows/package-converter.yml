@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Run data-free archive regression tests
-        run: python -m unittest discover -s tests -p test_package_converter.py -v
+        run: python -m unittest discover -s tests -p 'test_package_converter*.py' -v
       - name: Produce first clean code-only archive
         run: python -m scripts.package_converter --output "$RUNNER_TEMP/sblgnt-converter-first.zip"
       - name: Independently generate second archive
