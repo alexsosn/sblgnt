@@ -9,20 +9,21 @@ source base, or the distinct Faithlife whitespace-token TF.
 
 ## Source-model fidelity
 
-- Native TF `word` slots are original XML `<w>` entries, including
-  Greek Unicode, accents and word order. They are **not MorphGNT word
-  identities** and are not the earlier whitespace-token slots.
-- On each word slot: `word` (original element text), `prefix`
+- Native `xml_word` **nodes** represent every original XML `<w>` entry, preserving
+  Greek Unicode, accents and source order. Each is backed by a dedicated
+  `unit` slot with `unit_kind=xml_word`; these are not MorphGNT identities.
+  The `unit` slot type also supports structural (nonword) paragraph markers.
+- On each `xml_word` node: `word` (original element text), `prefix`
   (original editorial/presentation markup before the word),
   `suffix` (exact original post-word punctuation/spacing),
   `paragraph_ordinal` (original one-based `<p>` sequence number
   in its book), and `verse_word_ordinal` (one-based in its verse).
-- Word-bearing source `<p>` elements are also represented as native
-  `paragraph` span nodes. This models paragraphs crossing verse
-  boundaries rather than imposing paragraph=verse. Source empty
-  paragraphs lack word slots; their exact ordinal indices are
-  preserved by `empty_paragraphs_json` on the book, together with
-  `paragraph_count`. The auditor checks this pair exhaustively.
+- **Every** source `<p>` element is represented by a native TF
+  `paragraph` node with `paragraph` ordinal and `paragraph_empty`
+  scalar features. Nonempty paragraphs span their actual source word units,
+  possibly across scripture verses. Empty paragraphs contain their own
+  `unit_kind=empty_paragraph` marker slot attached only to their book,
+  never a forged Greek word or verse. No JSON/XML/blob-valued features.
 - Native book/chapter/verse section nodes preserve 27 books,
   260 chapters and 7,939 verse references. Original XML book id and
   Greek title are retained, plus original Greek verse text and
@@ -54,7 +55,8 @@ python -m scripts.audit_faithlife_xml_tf \
   --report /tmp/faithlife-xml-word-tf-audit.json
 ```
 
-Actual redistribution remains subject to rights/provenance issue #16.
+Converter software publication does not require permissions for data redistribution.
+Generated datasets remain local; optional corpus-data publication is separate (issue #16).
 User-facing app/release and interoperability work is tracked separately
 in #17. There is no publication of the converted Greek source corpus
 in this repository by this work.
