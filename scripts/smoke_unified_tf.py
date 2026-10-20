@@ -4,6 +4,7 @@ import argparse
 from collections import Counter
 from pathlib import Path
 import json
+from itertools import islice
 import time
 import tracemalloc
 from textwrap import dedent
@@ -13,7 +14,7 @@ from scripts.build_unified_tf import build_unified_tf, COUNTS
 
 def collect_search_matches(api, query: str):
     """Consume bounded TF Search results; an empty generator means no match."""
-    return tuple(api.S.search(query, limit=64))
+    return tuple(islice(api.S.search(query, limit=64), 64))
 
 
 def smoke_unified(morphgnt: Path, faithlife: Path, output: Path):
