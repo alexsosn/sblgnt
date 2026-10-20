@@ -22,13 +22,13 @@ B.pretty(B.api.T.nodeFromSection(("John", 7, 53)))
 
 Each local profile uses the internal TF app-version label `candidate-local` because Text-Fabric 13.1.0's advanced-app link code requires a non-null version even for a preloaded local API. That label is **not a published native TF edition, versioned data directory or release tag**.
 
-The loader checks the **full** pinned SHA and converter identity declared in local `otext.tf` (metadata identity, not cryptographic verification of source bytes), verifies slot type (`word`, `token` or `note`), loads only edition-supported native features from the **explicit local path**, and passes the loaded API to Text-Fabric as `use("app:/local/profile", api=api)`. The operation is offline and does not use `use("alexsosn/sblgnt")` or the default GitHub corpus downloader.
+The loader checks the **full** pinned SHA and converter identity declared in local `otext.tf` (metadata identity, not cryptographic verification of source bytes), verifies the source-qualified slot type (`word`, `token`, `unit` or `note`), loads only edition-supported native features from the **explicit local path**, and passes the loaded API to Text-Fabric as `use("app:/local/profile", api=api)`. The operation is offline and does not use `use("alexsosn/sblgnt")` or the default GitHub corpus downloader.
 
 | Profile | Native slot | Relevant pretty display features | Source scope |
 | --- | --- | --- | --- |
 | `morphgnt` | `word` | `text`, `lemma`, `morphology`, `morph_pos` | MorphGNT v6.12, pinned 2024 source |
 | `faithlife-text` | `token` | `source_text`, `ordinal` | Faithlife v1.2 plaintext, whitespace tokens |
-| `faithlife-xml` | `word` | `source_text`, `prefix`, `suffix`, `paragraph_ordinal` | Faithlife v1.2 XML original word boundaries |
+| `faithlife-xml` | `unit` | `source_text`, native `xml_word` / `paragraph` nodes and `prefix`, `suffix`, `paragraph_ordinal`, `paragraph_empty` | Faithlife v1.2 original XML words, including empty paragraphs |
 | `faithlife-apparatus` | `note` | `anchor_label`, `note_text`, `note_ordinal` | Faithlife v1.2 opaque apparatus notes (sparse verses) |
 
 MorphGNT does **not** contain morphology for John 7:53–8:11, while Faithlife plaintext/XML do contain the Greek text. The apparatus app only has sections with real notes; absence of an apparatus node is **not** evidence that the base text verse is omitted. These apps provide no cross-edition word identity or inferred reading equivalence.
