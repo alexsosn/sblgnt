@@ -1,6 +1,6 @@
 # Agent development workflow
 
-Release-scope decision (2026-10-20): **distribute converter code only**, never generated or copied source TF Greek corpora in software packages. Issue #16 / `release/source_rights.json` apply only to separately proposed data-bearing releases. Do not block converter ZIP/software merges on upstream *data redistribution* approvals. Explicitly verify the ZIP allowlist, member bytes, and no `tf/`, notebooks, downloaded source checkouts, or corpus archives. The repository still tracks legacy `tf/2022` (issue #33), so an automatic GitHub source ZIP is **not** an approved software-only artifact.
+Release scope: distribute converter and auditor **software only**. Upstream data redistribution permissions (#16) do not block verified code-only ZIPs. The Git repository still tracks legacy `tf/2022` (#33), so GitHub automatic source downloads cannot be advertised as data-free. Maintain an exact reviewed code-file allowlist, deterministic ZIP bytes, a fresh extracted-archive CLI smoke and independent audit. Keep the unified native TF one-query E2E gate.
 
 Scope: maintain this fork as a verifiable native Text-Fabric Greek NT parent for CopticScriptorium-TF. Preserve edition/source provenance and avoid storing semantic XML/JSON blobs as TF features.
 
@@ -10,3 +10,11 @@ Scope: maintain this fork as a verifiable native Text-Fabric Greek NT parent for
 - **Real tests:** independently audit pinned source and generated TF, fresh TF API load, section/word identity, regressions, and CI. State which assertions are synthetic versus exercised on full real data.
 - **Separate adversarial review:** a logically independent code/data pass must challenge editorial/verse interpretations, sample-source mismatches, false pass/fail assumptions, invalid section/slot handling, hidden license dependencies, reproducibility and resource bounds. Record the findings on each PR. Do not merge on failing or unverified required CI.
 - **Efficiency:** batch logically related corpus mappings and tests; avoid a PR per verse/entity. Distinguish *reference candidate* from verified textual or token alignment.
+
+## Unified TF native modeling invariants (#34)
+
+- Transform known source XML tags/attributes into typed TF nodes, links, and scalar features; never persist XML trees, serialized JSON paragraph indices, or base64/XML payloads as features of the unified corpus.
+- MorphGNT, Faithlife plaintext, XML words and apparatus annotations have distinct node types and atomic source units. Shared biblical verse containment means co-occurrence, not verified token or reading equivalence.
+- Retain original XML paragraph IDs (including empty ones), verse-number labels, original publication/license hyperlink, notes and prefix/suffix distinction; never invent MorphGNT annotations for John 7:53–8:11.
+- Keep a user-facing **one TF Search** E2E and an independent full-source-to-native-TF content auditor. The four publication-only slots must be the *only* slots intentionally outside scripture book sections.
+- Distribute converter code, not a generated corpus; source-data redistribution approvals do not block the software release.

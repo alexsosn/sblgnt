@@ -17,10 +17,12 @@ REQUIRED_SCRIPTS = (
     "audit_faithlife_text_tf.py",
     "audit_faithlife_xml_tf.py",
     "audit_tf.py",
+    "audit_unified_tf.py",
     "build_base_tf.py",
     "build_faithlife_apparatus_tf.py",
     "build_faithlife_text_tf.py",
     "build_faithlife_xml_tf.py",
+    "build_unified_tf.py",
     "compare_faithlife_refs.py",
     "compare_faithlife_text.py",
     "compare_morphgnt.py",
@@ -34,6 +36,7 @@ REQUIRED_SCRIPTS = (
     "release_rights.py",
     "smoke_local_tf_apps.py",
     "smoke_local_verses.py",
+    "smoke_unified_tf.py",
     "source_morphology.py",
     "stage_base_release.py",
     "upstream_drift.py",
@@ -42,7 +45,7 @@ REQUIRED_DOCS = (
     "BASE_CONVERTER.md", "FAITHLIFE_TEXT_BASE.md",
     "FAITHLIFE_XML_NATIVE_TF.md", "FAITHLIFE_APPARATUS_TF.md",
     "LOCAL_TF_APPS.md", "LOCAL_VERSE_LOOKUP.md", "RELEASE_RIGHTS.md",
-    "CONVERTER_RELEASE.md",
+    "CONVERTER_RELEASE.md", "UNIFIED_NATIVE_TF.md",
 )
 PROFILES = ("morphgnt", "faithlife-text", "faithlife-xml", "faithlife-apparatus")
 STATIC_FILES = ("README.md", "LICENSE", "release/source_rights.json")

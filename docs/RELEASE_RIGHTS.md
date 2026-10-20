@@ -1,9 +1,6 @@
 # Optional corpus-data publication policy (issue #16)
 
-**Release scope correction — 2026-10-20:** Our product release is the **converter code**. The rights registry below applies only to a separate proposal to redistribute original Greek texts, MorphGNT annotations, critical apparatus or generated corpus-bearing TF assets. **It must not block distribution of source-code-only archives.** The independently verified converter ZIP built by `scripts.package_converter` contains software, selected docs and code license, no original/derived corpus data. Its gate is strict archive-content verification, not approval of third-party *data* licenses. Local user generation from user-provided source checkouts does not itself publish those inputs.
-
-**Existing repository caveat:** 31 `tf/2022` feature files are already committed in this repo. GitHub auto-generated source tarballs/ZIPs still contain those files, even though the custom converter ZIP does not; see #33. This policy does not retroactively license or reclassify previously committed data.
-
+**Scope correction, 2026-10-20:** This registry is a gate only when separately redistributing upstream or generated **corpus data**. Our release deliverable is the converter software, excluding original Greek text, apparatus and TF corpora. The independent code-only ZIP is gated by strict inventory and checksum/byte verification, not by upstream *data* license approval. This repository still contains legacy `tf/2022` (issue #33), so GitHub-generated archives are not code-only.
 
 This is a **source-backed rights inventory and mandatory release gate**,
 not a legal opinion or authorization to republish third-party data.

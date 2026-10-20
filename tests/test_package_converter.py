@@ -65,6 +65,9 @@ class ConverterArtifactTests(unittest.TestCase):
                 "scripts.build_faithlife_apparatus_tf",
                 "scripts.inspect_verse",
                 "scripts.package_converter",
+                "scripts.build_unified_tf",
+                "scripts.audit_unified_tf",
+                "scripts.smoke_unified_tf",
             ):
                 with self.subTest(script=script):
                     result = subprocess.run(

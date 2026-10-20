@@ -3,9 +3,9 @@
 
 ## Converter-only software distribution
 
-**Our release artifact is the converter software, not a Greek NT dataset.** The [converter release guide](docs/CONVERTER_RELEASE.md) explains how to build the independently verified code-only ZIP, install Python dependencies and convert pinned local upstream source checkouts. Publishing that ZIP does **not** require permission to redistribute MorphGNT/Faithlife source data because those data are not included. The data-only approval registry (#16) is irrelevant to this software artifact.
+The release artifact is a reproducible source-code ZIP containing converters, audits, TF app profiles and documentation, including [the unified converter](docs/UNIFIED_NATIVE_TF.md). It contains no upstream Greek text or generated TF corpus; upstream **data redistribution** permissions are not a gate for this software artifact. Build/verify using [the code-only release guide](docs/CONVERTER_RELEASE.md).
 
-The historical repository still tracks `tf/2022`; GitHub's automatically generated repository source archives therefore **must not be described as code-only**. See [cleanup issue #33](https://github.com/alexsosn/sblgnt/issues/33). The official code-only deliverable is the allowlisted ZIP produced by `python -m scripts.package_converter`.
+This repository still tracks the historical `tf/2022` corpus: GitHub's automatically generated source ZIP/TAR **is not code-only**; see [#33](https://github.com/alexsosn/sblgnt/issues/33). Only the verified ZIP from the package-converter workflow qualifies as a software-only artifact.
 
 ## Historical bundled dataset (legacy, excluded from converter ZIP)
 
@@ -33,3 +33,9 @@ GNT = use("alexsosn/sblgnt", version="2022")
 ## Inspect a local pinned edition
 
 For actual local Text-Fabric advanced-app display in notebooks, see [four offline edition-specific app profiles](docs/LOCAL_TF_APPS.md), which use a caller-provided native TF directory and never fetch source data. The historical `use("alexsosn/sblgnt", version="2022")` example above loads the **legacy** edition. For newer, source-pinned candidate builds, use the [edition-qualified local verse inspector](docs/LOCAL_VERSE_LOOKUP.md). It reads MorphGNT word/morphology, official Faithlife plaintext, official XML word boundaries, or critical-apparatus notes without conflating them. Those new candidate datasets are **not yet distributed**; publication is held by the [source-rights gate](docs/RELEASE_RIGHTS.md).
+
+## Unified four-edition Text-Fabric (local conversion)
+
+You can now generate **one native TF graph** from pinned MorphGNT and Faithlife source checkouts, with MorphGNT morphology, official plaintext/orthographic tokens, original XML word/prefix/suffix/paragraph markup, and sparse apparatus notes. It supports one cross-edition `api.S.search()` template over a shared canonical verse hierarchy. All original XML structures are native TF nodes/features; no XML/JSON blobs are encoded into features. **No upstream Greek dataset is bundled.**
+
+See [conversion commands, native schema and a four-layer query example](docs/UNIFIED_NATIVE_TF.md). Word-token identities remain edition-specific and are never inferred from a shared verse.

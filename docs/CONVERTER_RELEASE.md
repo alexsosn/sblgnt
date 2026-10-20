@@ -12,7 +12,7 @@ apparatus records, BibleOL dictionary exports, Excel notebooks or caches.
 Run from the repository root with Python 3.12:
 
 ```bash
-python -m unittest discover -s tests -p test_package_converter.py -v
+python -m unittest discover -s tests -p 'test_package_converter*.py' -v
 python -m scripts.package_converter --output /tmp/sblgnt-converter.zip
 python -m scripts.package_converter --verify /tmp/sblgnt-converter.zip
 ```
@@ -75,3 +75,7 @@ The ZIP manifest proves byte-for-byte containment against the selected
 software files. It does not by itself establish the license of any
 third-party code copied into those files; keep normal code-dependency and
 software-license review in the converter release process.
+
+## Unified native Text-Fabric corpus
+
+The software ZIP also contains `scripts.build_unified_tf`, `scripts.audit_unified_tf`, `scripts.smoke_unified_tf` and [the unified schema and query guide](UNIFIED_NATIVE_TF.md). Users provide their own pinned MorphGNT and Faithlife checkouts. All four editions can then be converted locally into one native TF graph, queried with one `api.S.search()`. No Greek corpus or XML/JSON blob features are bundled.
