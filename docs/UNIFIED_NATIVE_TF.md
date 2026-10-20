@@ -73,3 +73,21 @@ reports local generation wall time, peak Python tracemalloc, flat
 uploaded as public artifacts. A separate independent full-source
 auditor should inspect textual, token, paragraph and note values, rather
 than relying only on headline counts and the join smoke.
+
+## Real full-corpus performance checkpoint
+
+On GitHub Actions' Python 3.12 / Text-Fabric 13.1.0 environment, a successful
+full pinned-source conversion and four-layer TF Search smoke measured
+approximately 88 seconds to generate, 941 MB peak traced Python allocations,
+35.2 MB in top-level native `.tf` feature files (excluding caches), and
+170 ms for the bounded four-layer Mark 1:1 query. These are observations,
+not hardware-independent performance guarantees. Text-Fabric includes
+around 420,000 source-occurrence unit slots and nearly one million nodes
+because the four original tokenizations/annotation layers are all kept
+separate. Review memory use before adopting this on constrained machines.
+
+The non-scripture publication metadata deliberately occupies four
+sectionless native source-unit slots, rather than assigning publication
+lines to a fabricated Bible verse. The independent full-source audit
+now checks that **those four are the only units outside canonical book
+nodes**; empty XML paragraph markers belong to the source book only.
