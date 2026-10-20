@@ -5,6 +5,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from hashlib import sha256
 import json
 import unittest
+import subprocess
+import sys
 
 from scripts.package_converter import (
     PACKAGE_ROOT, REQUIRED_SCRIPTS, REQUIRED_DOCS, PROFILES,
@@ -46,6 +48,33 @@ class ConverterArtifactTests(unittest.TestCase):
         self.assertNotIn("tf/2022/text.tf", files)
         self.assertTrue(all(not path.startswith(("tf/", "programs/", "upstream-")) for path in files))
         self.assertTrue(all(not path.endswith((".tf", ".txt", ".ipynb", ".xlsx", ".xml")) for path in files))
+
+    def test_extracted_real_archive_runs_converter_help_without_data_or_tf(self):
+        root = Path(__file__).resolve().parents[1]
+        with TemporaryDirectory() as d:
+            base = Path(d)
+            archive_path = base / "software.zip"
+            build_archive(root, archive_path)
+            with ZipFile(archive_path) as archive:
+                archive.extractall(base / "unpacked")
+            cwd = base / "unpacked" / PACKAGE_ROOT
+            for script in (
+                "scripts.build_base_tf",
+                "scripts.build_faithlife_text_tf",
+                "scripts.build_faithlife_xml_tf",
+                "scripts.build_faithlife_apparatus_tf",
+                "scripts.inspect_verse",
+                "scripts.package_converter",
+            ):
+                with self.subTest(script=script):
+                    result = subprocess.run(
+                        [sys.executable, "-m", script, "--help"],
+                        cwd=cwd, capture_output=True, text=True, timeout=15,
+                    )
+                    self.assertEqual(
+                        result.returncode, 0,
+                        f"extracted converter CLI failed: {script} (exit {result.returncode})",
+                    )
 
     def test_build_is_byte_reproducible_and_contains_source_free_manifest(self):
         with TemporaryDirectory() as d:
