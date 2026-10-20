@@ -104,22 +104,27 @@ def audit_xml_word_tf(source: Path, tf_dir: Path, *,
     for forbidden in ("lemma.tf", "source_pos.tf", "morphology.tf", "source_parsing.tf"):
         if (tf_dir / forbidden).exists():
             raise ValueError("invented grammar in official XML candidate")
+    if (tf_dir / "empty_paragraphs_json.tf").exists():
+        raise ValueError("serialized paragraph JSON feature must not exist")
     from tf.fabric import Fabric
     api = Fabric(locations=[str(tf_dir.resolve())], silent="deep").load(
-        "book xml_book_id title paragraph_count empty_paragraphs_json "
+        "book xml_book_id title paragraph_count paragraph_empty unit_kind "
         "chapter verse paragraph source_text trailing_spaces "
         "word prefix suffix paragraph_ordinal verse_word_ordinal", silent="deep",
     )
     if not api:
         raise RuntimeError("unable to load native Faithlife XML TF")
+    if api.F.otype.slotType != "unit":
+        raise ValueError("expected dedicated source-occurrence unit slots")
     counts = {
         "book": len(api.F.otype.s("book")),
         "chapter": len(api.F.otype.s("chapter")),
         "verse": len(api.F.otype.s("verse")),
-        "word": len(api.F.otype.s("word")),
+        "word": len(api.F.otype.s("xml_word")),
         "paragraph": 0,
         "prefix": 0,
-        "nonempty_paragraph": len(api.F.otype.s("paragraph")),
+        "nonempty_paragraph": sum(api.F.paragraph_empty.v(p) == 0
+                                    for p in api.F.otype.s("paragraph")),
         "empty_paragraph": 0,
     }
     original_plain = list(iter_faithlife_verses(source / "data" / "sblgnt" / "text"))
@@ -140,7 +145,7 @@ def audit_xml_word_tf(source: Path, tf_dir: Path, *,
         if api.F.trailing_spaces.v(verse) != original.trailing_spaces:
             raise ValueError(f"native XML source padding drift: {ref}")
     tf_books = iter(api.F.otype.s("book"))
-    slots = iter(api.F.otype.s("word"))
+    words = iter(api.F.otype.s("xml_word"))
     true_nonempty = 0
     for meta in original_xml_events(source / "data" / "sblgnt" / "xml"):
         book_node = next(tf_books, None)
@@ -152,34 +157,57 @@ def audit_xml_word_tf(source: Path, tf_dir: Path, *,
             raise ValueError(f"original Greek book title changed: {meta['book']}")
         if api.F.paragraph_count.v(book_node) != meta["total_paragraphs"]:
             raise ValueError(f"original paragraph count changed: {meta['book']}")
-        json_empty = json.loads(api.F.empty_paragraphs_json.v(book_node))
-        if json_empty != meta["empty_paragraphs"]:
-            raise ValueError(f"empty paragraph ordinals changed: {meta['book']}")
-        counts["paragraph"] += meta["total_paragraphs"]
-        counts["empty_paragraph"] += len(meta["empty_paragraphs"])
+        paragraph_nodes = api.L.d(book_node, otype="paragraph")
+        paragraphs = {api.F.paragraph.v(node): node for node in paragraph_nodes}
+        if len(paragraph_nodes) != meta["total_paragraphs"] or set(paragraphs) != set(
+            range(1, meta["total_paragraphs"] + 1)
+        ):
+            raise ValueError(f"native paragraph identities or counts changed: {meta['book']}")
+        empties = set(meta["empty_paragraphs"])
+        for ordinal, node in paragraphs.items():
+            expected_empty = int(ordinal in empties)
+            if api.F.paragraph_empty.v(node) != expected_empty:
+                raise ValueError("native paragraph empty status differs from original XML")
+            if expected_empty:
+                unit_slots = api.E.oslots.s(node)
+                if (len(unit_slots) != 1 or
+                        api.F.unit_kind.v(unit_slots[0]) != "empty_paragraph" or
+                        api.L.u(node, otype="verse")):
+                    raise ValueError("empty paragraph misassigned to invented Greek verse/word")
+        counts["paragraph"] += len(paragraph_nodes)
+        counts["empty_paragraph"] += len(empties)
         nonempty_ids = set()
         for ref, ordinal, paragraph, word, prefix, suffix in meta["records"]:
-            slot = next(slots, None)
-            if slot is None or api.T.sectionFromNode(slot) != ref:
+            word_node = next(words, None)
+            if word_node is None or api.T.sectionFromNode(word_node) != ref:
                 raise ValueError(f"official XML word reference drift: {ref}")
+            word_units = api.E.oslots.s(word_node)
+            if len(word_units) != 1 or api.F.unit_kind.v(word_units[0]) != "xml_word":
+                raise ValueError("invalid source-word unit identity")
             if (
-                api.F.word.v(slot) != word
-                or (api.F.prefix.v(slot) or "") != prefix
-                or (api.F.suffix.v(slot) or "") != suffix
-                or api.F.verse_word_ordinal.v(slot) != ordinal
-                or api.F.paragraph_ordinal.v(slot) != paragraph
+                api.F.word.v(word_node) != word
+                or (api.F.prefix.v(word_node) or "") != prefix
+                or (api.F.suffix.v(word_node) or "") != suffix
+                or api.F.verse_word_ordinal.v(word_node) != ordinal
+                or api.F.paragraph_ordinal.v(word_node) != paragraph
             ):
                 raise ValueError(f"official XML word/prefix/suffix changed: {ref}")
-            parent_paras = api.L.u(slot, otype="paragraph")
+            parent_paras = api.L.u(word_node, otype="paragraph")
             if len(parent_paras) != 1 or api.F.paragraph.v(parent_paras[0]) != paragraph:
                 raise ValueError(f"original paragraph boundary not represented in TF: {ref}")
             nonempty_ids.add(paragraph)
             counts["prefix"] += int(bool(prefix))
         true_nonempty += len(nonempty_ids)
-    if next(slots, None) is not None or next(tf_books, None) is not None:
+    if next(words, None) is not None or next(tf_books, None) is not None:
         raise ValueError("extra native XML words or books")
     if true_nonempty != counts["nonempty_paragraph"]:
         raise ValueError("native TF nonempty paragraph-node inventory differs")
+    if (api.F.otype.maxSlot != counts["word"] + counts["empty_paragraph"] or
+            len(api.F.otype.s("paragraph")) != counts["paragraph"]):
+        raise ValueError("source occurrence slots/paragraphs contain extras or omissions")
+    if any(api.F.unit_kind.v(s) not in {"xml_word", "empty_paragraph"}
+           for s in api.F.otype.s("unit")):
+        raise ValueError("unexpected source unit identity in native XML TF")
     if any(counts[key] != expected for key, expected in PINNED.items()):
         raise ValueError(f"original official XML feature inventory changed: {counts}")
     meta = tf_dir / "otext.tf"
