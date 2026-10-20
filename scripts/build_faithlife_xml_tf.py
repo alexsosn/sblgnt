@@ -139,12 +139,11 @@ def build_faithlife_xml_tf(source: Path, output: Path, *,
                 (root / "xml" / f"{stem}.xml").read_text(encoding="utf-8-sig"),
                 book
             )
-            n_paragraphs, empty_json, nonempty = paragraph_metadata(parsed)
+            n_paragraphs, empty_indices, nonempty = paragraph_metadata(parsed)
             end_book()
             book_node = cv.node("book")
             cv.feature(book_node, book=book, xml_book_id=parsed.book_id,
-                       title=parsed.title, paragraph_count=n_paragraphs,
-                       empty_paragraphs_json=empty_json)
+                       title=parsed.title, paragraph_count=n_paragraphs)
             counts["book"] += 1
             counts["paragraph"] += n_paragraphs
             counts["nonempty_paragraph"] += nonempty
@@ -174,21 +173,38 @@ def build_faithlife_xml_tf(source: Path, output: Path, *,
                 if record.paragraph != old_paragraph:
                     end_paragraph()
                     paragraph_node = cv.node("paragraph")
-                    cv.feature(paragraph_node, paragraph=record.paragraph)
+                    cv.feature(paragraph_node, paragraph=record.paragraph, paragraph_empty=0)
                     old_paragraph = record.paragraph
-                slot = cv.slot()
+                word_node = cv.node("xml_word")
                 cv.feature(
-                    slot,
+                    word_node,
                     word=record.surface,
                     prefix=record.prefix,
                     suffix=record.suffix,
                     paragraph_ordinal=record.paragraph,
                     verse_word_ordinal=record.verse_ordinal,
                 )
+                slot = cv.slot()
+                cv.feature(
+                    slot, unit_kind="xml_word",
+                    unit_display=record.prefix + record.surface + record.suffix,
+                )
                 cv.terminate(slot)
+                cv.terminate(word_node)
                 if record.prefix:
                     counts["prefix"] += 1
                 counts["word"] += 1
+            # Empty original paragraphs must never masquerade as lexical
+            # word slots or be assigned to a fabricated scripture verse.
+            end_chapter()
+            end_paragraph()
+            for ordinal in empty_indices:
+                paragraph_node = cv.node("paragraph")
+                cv.feature(paragraph_node, paragraph=ordinal, paragraph_empty=1)
+                slot = cv.slot()
+                cv.feature(slot, unit_kind="empty_paragraph", unit_display="")
+                cv.terminate(slot)
+                cv.terminate(paragraph_node)
         end_book()
         for name, expected in EXPECTED.items():
             if counts[name] != expected:
@@ -199,9 +215,9 @@ def build_faithlife_xml_tf(source: Path, output: Path, *,
         stage = Path(directory)
         cv = CV(Fabric(locations=[str(stage)], silent="deep"))
         ok = cv.walk(
-            director, "word",
+            director, "unit",
             otext={
-                "fmt:text-orig-full": "{prefix}{word}{suffix}",
+                "fmt:text-orig-full": "{unit_display}",
                 "sectionTypes": "book,chapter,verse",
                 "sectionFeatures": "book,chapter,verse",
             },
@@ -209,7 +225,7 @@ def build_faithlife_xml_tf(source: Path, output: Path, *,
                 "Name": "Official SBLGNT v1.2 XML word and paragraph source candidate",
                 "Source": "https://github.com/Faithlife/SBLGNT",
                 "sourceCommit": source_commit,
-                "Version": f"source-{source_commit[:12]}",
+                "Version": f"source-{source_commit[:12]}-native-unit-v2",
                 "Edition": "SBLGNT-v1.2+2025-whitespace-fixes",
                 "AnnotationScope": "official XML word/prefix/suffix and paragraphs only",
                 "Rights": "Source licenses/attribution must be reviewed before redistribution",
@@ -217,7 +233,7 @@ def build_faithlife_xml_tf(source: Path, output: Path, *,
             },
             intFeatures={
                 "chapter", "verse", "paragraph", "paragraph_count",
-                "paragraph_ordinal", "verse_word_ordinal", "trailing_spaces",
+                "paragraph_ordinal", "paragraph_empty", "verse_word_ordinal", "trailing_spaces",
             },
             featureMeta={
                 "book": {"description": "Canonical NT book"},
@@ -225,12 +241,14 @@ def build_faithlife_xml_tf(source: Path, output: Path, *,
                 "title": {"description": "Exact source Greek title"},
                 "chapter": {"description": "Official chapter section"},
                 "verse": {"description": "Official verse section"},
-                "paragraph": {"description": "One-based original nonempty XML <p> index"},
+                "paragraph": {"description": "One-based source XML <p> index, including empty paragraphs"},
+                "paragraph_empty": {"description": "One iff this source paragraph is empty"},
+                "unit_kind": {"description": "XML word or empty-paragraph structural unit"},
+                "unit_display": {"description": "Original word with editorial prefix/suffix or empty marker"},
                 "paragraph_count": {"description": "Total original XML paragraphs, including empty ones"},
-                "empty_paragraphs_json": {"description": "JSON array of empty XML paragraph ordinals, otherwise absent from word slots"},
                 "source_text": {"description": "Exact Greek verse content reconstructed from official XML"},
                 "trailing_spaces": {"description": "Original official plaintext line padding count"},
-                "word": {"description": "Exact original XML <w> surface, NOT MorphGNT token identity"},
+                "word": {"description": "Exact XML <w> surface on non-slot xml_word node"},
                 "prefix": {"description": "Raw original XML <prefix> before this word, if present"},
                 "suffix": {"description": "Raw original XML <suffix> after this word"},
                 "paragraph_ordinal": {"description": "Original paragraph ordinal for this word"},
