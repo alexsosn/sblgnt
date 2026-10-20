@@ -1,5 +1,7 @@
 # Agent development workflow
 
+Release-scope decision (2026-10-20): **distribute converter code only**, never generated or copied source TF Greek corpora in software packages. Issue #16 / `release/source_rights.json` apply only to separately proposed data-bearing releases. Do not block converter ZIP/software merges on upstream *data redistribution* approvals. Explicitly verify the ZIP allowlist, member bytes, and no `tf/`, notebooks, downloaded source checkouts, or corpus archives. The repository still tracks legacy `tf/2022` (issue #33), so an automatic GitHub source ZIP is **not** an approved software-only artifact.
+
 Scope: maintain this fork as a verifiable native Text-Fabric Greek NT parent for CopticScriptorium-TF. Preserve edition/source provenance and avoid storing semantic XML/JSON blobs as TF features.
 
 - **Research:** inspect actual source data, code and license chain; identify missing evidence or uncertainties. Record an actionable source-linked finding in an issue (when Issues are enabled) or `BACKLOG.md`.
