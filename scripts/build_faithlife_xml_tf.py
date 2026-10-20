@@ -2,8 +2,8 @@
 
 This is a second, edition-qualified local/CI corpus candidate separate from
 the whitespace-token-only text candidate. Paragraph identity is retained
-even when a verse crosses paragraph boundaries; empty paragraphs have no
-word slots and are encoded as per-book source ordinal metadata.
+even when a verse crosses paragraph boundary. XML words are non-slot
+native nodes with unit slots; empty paragraphs get book-scoped marker slots.
 """
 from __future__ import annotations
 
@@ -33,20 +33,38 @@ class XmlTfWord:
     suffix: str
 
 
-def paragraph_metadata(book: XmlBook) -> tuple[int, str, int]:
-    """Validate complete source paragraph IDs and preserve empty nodes."""
+@dataclass(frozen=True)
+class NativeParagraph:
+    ordinal: int
+    empty: bool
+    word_count: int
+
+
+def native_paragraph_inventory(book: XmlBook) -> tuple[NativeParagraph, ...]:
+    """Validate complete source paragraph identities as scalar native records."""
     count = book.paragraph_count
     empty = book.empty_paragraph_indices
-    used = {word.paragraph for verse in book.verses for word in verse.words}
+    sizes = {}
+    for verse in book.verses:
+        for word in verse.words:
+            sizes[word.paragraph] = sizes.get(word.paragraph, 0) + 1
     if count < 1 or tuple(sorted(set(empty))) != empty:
-        raise ValueError("invalid source paragraph indices")
+        raise ValueError("invalid source empty paragraph indices")
     if any(not 1 <= index <= count for index in empty):
         raise ValueError("out-of-range empty source paragraph")
-    if used & set(empty):
+    if set(sizes) & set(empty):
         raise ValueError("declared empty paragraph contains words")
-    if used | set(empty) != set(range(1, count+1)):
-        raise ValueError("missing source paragraph from word/empty inventory")
-    return count, json.dumps(list(empty), separators=(",", ":")), len(used)
+    if set(sizes) | set(empty) != set(range(1, count + 1)):
+        raise ValueError("missing native source paragraph identity")
+    return tuple(NativeParagraph(i, i in empty, sizes.get(i, 0))
+                 for i in range(1, count + 1))
+
+
+def paragraph_metadata(book: XmlBook) -> tuple[int, tuple[int, ...], int]:
+    """Return source paragraph inventory without JSON blob encoding."""
+    inventory = native_paragraph_inventory(book)
+    empties = tuple(row.ordinal for row in inventory if row.empty)
+    return len(inventory), empties, len(inventory) - len(empties)
 
 
 def iter_xml_word_records(book: XmlBook):
