@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from io import BytesIO
 from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 
@@ -74,6 +75,18 @@ def _zipinfo(name):
     return info
 
 
+def _canonical_archive_bytes(files):
+    """Reconstruct the entire approved ZIP to catch hidden comments/trailers."""
+    with BytesIO() as stream:
+        with ZipFile(stream, "w", compression=ZIP_DEFLATED, compresslevel=9) as archive:
+            for name, data in files.items():
+                archive.writestr(_zipinfo(name), data, compresslevel=9)
+            manifest = _manifest(files)
+            payload = (json.dumps(manifest, sort_keys=True, indent=2) + "\\n").encode()
+            archive.writestr(_zipinfo(MANIFEST), payload, compresslevel=9)
+        return stream.getvalue()
+
+
 def verify_archive(path: Path, source_root: Path):
     files = selected_files(source_root)
     manifest = _manifest(files)
@@ -93,6 +106,8 @@ def verify_archive(path: Path, source_root: Path):
         for name, data in files.items():
             if archive.read(f"{PACKAGE_ROOT}/{name}") != data:
                 raise ValueError("source checksum mismatch: " + name)
+    if path.read_bytes() != _canonical_archive_bytes(files):
+        raise ValueError("noncanonical ZIP metadata, comment or trailing payload")
     return manifest
 
 
