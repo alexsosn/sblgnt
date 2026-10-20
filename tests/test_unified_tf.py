@@ -42,10 +42,10 @@ class UnifiedSourceContracts(unittest.TestCase):
     def test_unified_native_feature_headers_never_embed_wall_clock_date(self):
         with TemporaryDirectory() as scratch:
             path = Path(scratch) / "otext.tf"
-            path.write_bytes(b"@config\\n@dateWritten=2026-10-20\\n\\n")
+            path.write_bytes(b"@config\n@dateWritten=2026-10-20\n\n")
             with self.assertRaisesRegex(ValueError, "timestamp"):
                 assert_no_volatile_headers(Path(scratch))
-            path.write_bytes(b"@config\\n@sourceCommit=abc\\n\\n")
+            path.write_bytes(b"@config\n@sourceCommit=abc\n\n")
             self.assertEqual(assert_no_volatile_headers(Path(scratch)), 1)
 
     def test_faithlife_only_john_verse_has_no_fabricated_morphology(self):
