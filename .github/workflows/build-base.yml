@@ -117,6 +117,30 @@ jobs:
           --faithlife-dir upstream-faithlife
           --tf-dir "$RUNNER_TEMP/unified-native-tf"
           --report "$RUNNER_TEMP/unified-native-tf-content-audit.json"
+      - name: End-user E2E conversion from verified extracted software-only ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m scripts.package_converter --output "$RUNNER_TEMP/converter-e2e.zip"
+          python -m scripts.package_converter --verify "$RUNNER_TEMP/converter-e2e.zip"
+          mkdir "$RUNNER_TEMP/converter-unpacked"
+          python -c 'import sys,zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' "$RUNNER_TEMP/converter-e2e.zip" "$RUNNER_TEMP/converter-unpacked"
+          (
+            cd "$RUNNER_TEMP/converter-unpacked/sblgnt-converter"
+            PYTHONPATH= python -m scripts.smoke_unified_tf \
+              --morphgnt-dir "$GITHUB_WORKSPACE/upstream-morphgnt" \
+              --faithlife-dir "$GITHUB_WORKSPACE/upstream-faithlife" \
+              --output "$RUNNER_TEMP/unified-from-extracted-zip" \
+              --report "$RUNNER_TEMP/unified-extracted-e2e.json"
+          )
+          # Must compare BOTH exact file inventory and exact feature bytes.
+          # Neither check prints the underlying Greek source content.
+          diff -u \
+            <(find "$RUNNER_TEMP/unified-native-tf" -maxdepth 1 -type f -name '*.tf' -printf '%f\n' | sort) \
+            <(find "$RUNNER_TEMP/unified-from-extracted-zip" -maxdepth 1 -type f -name '*.tf' -printf '%f\n' | sort)
+          for f in "$RUNNER_TEMP/unified-native-tf"/*.tf; do
+            cmp "$f" "$RUNNER_TEMP/unified-from-extracted-zip/$(basename "$f")"
+          done
       - name: Independently regenerate exact MorphGNT 2024 base for byte-reproducibility
         run: python -m scripts.build_base_tf --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --output "$RUNNER_TEMP/sblgnt-generated-repeat"
       - name: Verify all 23 TF feature bytes and source-only release-candidate provenance
@@ -149,4 +173,5 @@ jobs:
             ${{ runner.temp }}/base-derived-morphology-audit.json
             ${{ runner.temp }}/unified-native-tf-smoke.json
             ${{ runner.temp }}/unified-native-tf-content-audit.json
+            ${{ runner.temp }}/unified-extracted-e2e.json
           if-no-files-found: ignore
