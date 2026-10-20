@@ -2,6 +2,12 @@ name: Build converter-only software archive
 
 # This job packages only source code and docs. It neither checks out
 # upstream Greek data nor publishes any generated Text-Fabric dataset.
+# Cancel only superseded validation for the SAME pull request.
+# Independent PRs, push checks and manually requested builds stay isolated.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 on:
   pull_request:
     branches: [main]
