@@ -97,6 +97,23 @@ class ConverterArtifactTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "symlink"):
                 selected_files(root)
 
+    def test_hidden_zip_comment_and_trailing_payload_are_rejected(self):
+        with TemporaryDirectory() as d:
+            base = Path(d)
+            root = fixture(base / "src")
+            target = base / "candidate.zip"
+            build_archive(root, target)
+            with ZipFile(target, "a") as archive:
+                archive.comment = b"UNDISCLOSED_SOURCE_CONTENT"
+            with self.assertRaisesRegex(ValueError, "canonical|metadata|comment"):
+                verify_archive(target, root)
+            target.unlink()
+            build_archive(root, target)
+            with target.open("ab") as out:
+                out.write(b"TRAILING_HIDDEN_CORPUS")
+            with self.assertRaisesRegex(ValueError, "canonical|trailing"):
+                verify_archive(target, root)
+
     def test_no_overwrite_or_output_in_source_tree(self):
         with TemporaryDirectory() as d:
             base = Path(d)
