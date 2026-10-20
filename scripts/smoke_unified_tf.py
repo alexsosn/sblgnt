@@ -65,7 +65,7 @@ def smoke_unified(morphgnt: Path, faithlife: Path, output: Path):
     if not hits or any(api.T.sectionFromNode(h[2]) != ("Mark", 1, 1) for h in hits):
         raise AssertionError("single joined TF search did not return expected Mark 1:1")
     # A deliberately impossible reference-scoped query should not match.
-    negative_query = dedent("""\\
+    negative_query = dedent("""
         book book=John
           chapter chapter=7
             verse verse=53
