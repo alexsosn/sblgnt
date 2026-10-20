@@ -11,6 +11,11 @@ from textwrap import dedent
 from scripts.build_unified_tf import build_unified_tf, COUNTS
 
 
+def collect_search_matches(api, query: str):
+    """Consume bounded TF Search results; an empty generator means no match."""
+    return tuple(api.S.search(query, limit=64))
+
+
 def smoke_unified(morphgnt: Path, faithlife: Path, output: Path):
     tracemalloc.start()
     started = time.monotonic()
@@ -60,7 +65,7 @@ def smoke_unified(morphgnt: Path, faithlife: Path, output: Path):
               apparatus_note
     """).strip()
     began = time.monotonic()
-    hits = api.S.search(query)
+    hits = collect_search_matches(api, query)
     query_ms = (time.monotonic() - began) * 1000
     if not hits or any(api.T.sectionFromNode(h[2]) != ("Mark", 1, 1) for h in hits):
         raise AssertionError("single joined TF search did not return expected Mark 1:1")
@@ -71,7 +76,7 @@ def smoke_unified(morphgnt: Path, faithlife: Path, output: Path):
             verse verse=53
               morph_word
     """).strip()
-    negative = api.S.search(negative_query)
+    negative = collect_search_matches(api, negative_query)
     if negative:
         section = api.T.sectionFromNode(negative[0][2])
         raise AssertionError(f"MorphGNT-only missing verse falsely matched at {section}")
