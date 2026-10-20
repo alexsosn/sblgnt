@@ -1,5 +1,8 @@
 """RED-first native unified TF source-contract regression tests (#34)."""
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from scripts.audit_unified_tf import assert_no_volatile_headers
 from types import SimpleNamespace
 from scripts.build_unified_tf import (
     combine_verse_rows, read_xml_verse_markers, parse_publication,
@@ -36,6 +39,15 @@ def apparatus(anchors=()):
 
 
 class UnifiedSourceContracts(unittest.TestCase):
+    def test_unified_native_feature_headers_never_embed_wall_clock_date(self):
+        with TemporaryDirectory() as scratch:
+            path = Path(scratch) / "otext.tf"
+            path.write_bytes(b"@config\\n@dateWritten=2026-10-20\\n\\n")
+            with self.assertRaisesRegex(ValueError, "timestamp"):
+                assert_no_volatile_headers(Path(scratch))
+            path.write_bytes(b"@config\\n@sourceCommit=abc\\n\\n")
+            self.assertEqual(assert_no_volatile_headers(Path(scratch)), 1)
+
     def test_faithlife_only_john_verse_has_no_fabricated_morphology(self):
         official = (verse("John", 7, 53), verse("John", 8, 1))
         xml = source_book([xmlverse(v.ref) for v in official])
