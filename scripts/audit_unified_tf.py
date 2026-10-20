@@ -10,6 +10,7 @@ from itertools import groupby
 import json
 from pathlib import Path
 import re
+import xml.etree.ElementTree as ET
 
 from scripts.build_base_tf import iter_source_words
 from scripts.build_faithlife_text_tf import iter_faithlife_verses
@@ -21,7 +22,7 @@ from scripts.faithlife_apparatus import parse_apparatus_book
 def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
     from tf.fabric import Fabric
     api = Fabric(locations=[str(tf_dir.resolve())], silent="deep").load("""
-        book chapter verse morph_text morph_lemma morph_morphology
+        book chapter verse faithlife_title apparatus_book_title xml_book_id xml_paragraph_total\n        morph_text morph_lemma morph_morphology
         morph_source_pos morph_source_parsing morph_ordinal morph_present
         faithlife_text faithlife_trailing_spaces
         plain_surface plain_start plain_end plain_ordinal
@@ -79,8 +80,29 @@ def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
 
     for book, stem in BOOK_FILES.items():
         root = source / "sblgnt" / "xml" / f"{stem}.xml"
-        parsed = parse_xml_book(root.read_text(encoding="utf-8-sig"), book)
+        source_xml = root.read_text(encoding="utf-8-sig")
+        parsed = parse_xml_book(source_xml, book)
         book_node = api.T.nodeFromSection((book,))
+        if (api.F.xml_book_id.v(book_node) != parsed.book_id or
+                api.F.faithlife_title.v(book_node) != parsed.title or
+                api.F.xml_paragraph_total.v(book_node) != parsed.paragraph_count):
+            raise ValueError(f"official XML book metadata mismatch: {book}")
+        # Audit exact <verse-number> ids and label strings independently
+        # from the converter's marker extractor.
+        xml_root = ET.fromstring(source_xml)
+        markers = [
+            (element.attrib["id"], element.text)
+            for paragraph in xml_root.findall("p")
+            for element in paragraph.findall("verse-number")
+        ]
+        if len(markers) != len(parsed.verses):
+            raise ValueError(f"XML verse marker inventory mismatch: {book}")
+        for src_verse, (marker_id, marker_label) in zip(parsed.verses, markers):
+            vn = api.T.nodeFromSection(src_verse.ref)
+            if (api.F.xml_verse_id.v(vn) != marker_id or
+                    api.F.xml_verse_label.v(vn) != marker_label):
+                raise ValueError(f"original XML verse marker mismatch: {src_verse.ref}")
+            counts["xml_verse_markers"] += 1
         paragraphs = api.L.d(book_node, otype="xml_paragraph")
         if len(paragraphs) != parsed.paragraph_count:
             raise ValueError(f"XML paragraph count mismatch in {book}")
@@ -130,6 +152,8 @@ def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
             (source / "sblgntapp" / "xml" / f"{stem}.xml").read_text(encoding="utf-8-sig"),
             book,
         )
+        if api.F.apparatus_book_title.v(book_node) != appar.title:
+            raise ValueError(f"original apparatus Greek book-name mismatch in {book}")
         for anchor_index, anchor in enumerate(appar.anchors, 1):
             ref = (book, anchor.ref[1], anchor.ref[2])
             node = api.T.nodeFromSection(ref)
@@ -146,6 +170,41 @@ def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
                     raise ValueError(f"verbatim apparatus note mismatch at {ref}")
                 counts["apparatus_notes"] += 1
             counts["apparatus_anchors"] += 1
+
+    # Directly audit publication XML as independently structured native
+    # publication_line/link nodes, not a serialized XML or JSON feature.
+    publication = ET.fromstring(
+        (source / "sblgnt" / "xml" / "sblgnt.xml").read_text(encoding="utf-8-sig")
+    )
+    original_lines = []
+    for section in publication:
+        for index, p in enumerate(section.findall("p"), 1):
+            a = p.find("a")
+            text = ((p.text or "") + ((a.text or "") + (a.tail or "") if a is not None else ""))
+            original_lines.append((section.tag, index, text))
+    native_lines = api.F.otype.s("publication_line")
+    if len(native_lines) != len(original_lines):
+        raise ValueError("publication metadata line inventory mismatch")
+    for n, (kind, index, text) in zip(native_lines, original_lines):
+        if (api.F.publication_section.v(n) != kind or
+                api.F.publication_ordinal.v(n) != index or
+                api.F.publication_text.v(n) != text):
+            raise ValueError("source publication metadata mismatch")
+        counts["publication_lines"] += 1
+    src_link = publication.find("license/p/a")
+    native_link = api.F.otype.s("publication_link")
+    if (src_link is None or len(native_link) != 1 or
+            api.F.publication_link_href.v(native_link[0]) != src_link.attrib["href"] or
+            api.F.publication_link_text.v(native_link[0]) != (src_link.text or "")):
+        raise ValueError("source publication license hyperlink mismatch")
+
+    for kind, label in (("morph_word", "morph_words"),
+                        ("plain_token", "plain_tokens"),
+                        ("xml_word", "xml_words"),
+                        ("apparatus_note", "apparatus_notes"),
+                        ("apparatus_anchor", "apparatus_anchors")):
+        if len(api.F.otype.s(kind)) != counts[label]:
+            raise ValueError(f"unexpected extra native {kind} nodes")
 
     return {"status": "pass", **counts,
             "scope": "real-source native TF equality, source-specific nodes; no token alignment"}
