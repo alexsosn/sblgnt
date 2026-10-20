@@ -20,6 +20,7 @@ REQUIRED_DOCS = (
     "BASE_CONVERTER.md", "FAITHLIFE_TEXT_BASE.md",
     "FAITHLIFE_XML_NATIVE_TF.md", "FAITHLIFE_APPARATUS_TF.md",
     "LOCAL_TF_APPS.md", "LOCAL_VERSE_LOOKUP.md", "RELEASE_RIGHTS.md",
+    "CONVERTER_RELEASE.md",
 )
 PROFILES = ("morphgnt", "faithlife-text", "faithlife-xml", "faithlife-apparatus")
 STATIC_FILES = ("README.md", "LICENSE", "release/source_rights.json")
