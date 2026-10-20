@@ -110,6 +110,13 @@ jobs:
           --faithlife-dir upstream-faithlife
           --output "$RUNNER_TEMP/unified-native-tf"
           --report "$RUNNER_TEMP/unified-native-tf-smoke.json"
+      - name: Independently audit every source field against reloaded native unified TF
+        run: >-
+          python -m scripts.audit_unified_tf
+          --morphgnt-dir upstream-morphgnt
+          --faithlife-dir upstream-faithlife
+          --tf-dir "$RUNNER_TEMP/unified-native-tf"
+          --report "$RUNNER_TEMP/unified-native-tf-content-audit.json"
       - name: Independently regenerate exact MorphGNT 2024 base for byte-reproducibility
         run: python -m scripts.build_base_tf --source-dir upstream-morphgnt --source-commit aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d --output "$RUNNER_TEMP/sblgnt-generated-repeat"
       - name: Verify all 23 TF feature bytes and source-only release-candidate provenance
@@ -141,4 +148,5 @@ jobs:
             ${{ runner.temp }}/base-all-fields-audit.json
             ${{ runner.temp }}/base-derived-morphology-audit.json
             ${{ runner.temp }}/unified-native-tf-smoke.json
+            ${{ runner.temp }}/unified-native-tf-content-audit.json
           if-no-files-found: ignore
