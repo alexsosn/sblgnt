@@ -143,6 +143,15 @@ class ConverterArtifactTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "canonical|trailing"):
                 verify_archive(target, root)
 
+    def test_unreviewed_python_module_does_not_silently_enter_release(self):
+        with TemporaryDirectory() as d:
+            root = fixture(Path(d) / "src")
+            (root / "scripts" / "unreviewed_payload.py").write_text(
+                "EMBEDDED_UNCHECKED_DATA = 'not approved for archive'\n", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "unexpected|unreviewed"):
+                selected_files(root)
+
     def test_no_overwrite_or_output_in_source_tree(self):
         with TemporaryDirectory() as d:
             base = Path(d)
