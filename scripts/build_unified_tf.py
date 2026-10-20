@@ -159,6 +159,7 @@ def emit_unified_book(cv, book, rows, xml_book, markers, counters):
     active_chapter = None
     paragraph_nodes = {}
     paragraph_used = set()
+    anchor_ordinal_in_book = 0
     for item, marker in zip(rows, markers):
         plain, xml = item.plain, item.xml_verse
         if plain.chapter != active_chapter:
@@ -226,9 +227,10 @@ def emit_unified_book(cv, book, rows, xml_book, markers, counters):
             counters["xml_suffix"] += 1
         if item.apparatus_anchor is not None:
             anchor = item.apparatus_anchor
+            anchor_ordinal_in_book += 1
             anode = cv.node("apparatus_anchor")
             cv.feature(anode, apparatus_anchor_label=anchor.label,
-                       apparatus_anchor_ordinal=counters["apparatus_anchor"] + 1)
+                       apparatus_anchor_ordinal=anchor_ordinal_in_book)
             counters["apparatus_anchor"] += 1
             for index, note in enumerate(anchor.notes, 1):
                 emit_native_node(cv, "apparatus_note", "faithlife-apparatus", "",
