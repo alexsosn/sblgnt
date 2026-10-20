@@ -19,10 +19,36 @@ from scripts.faithlife_xml import parse_xml_book
 from scripts.faithlife_apparatus import parse_apparatus_book
 
 
+def assert_only_publication_slots_unsectioned(api):
+    """Ensure every atomic source event is in scripture or explicit frontmatter.
+
+    Source publication lines are intentionally non-scripture metadata slots.
+    No arbitrary corpus slot may silently fall outside canonical book nodes.
+    """
+    all_slots = set(range(1, api.F.otype.maxSlot + 1))
+    scriptures = set()
+    for book in api.F.otype.s("book"):
+        scriptures.update(api.E.oslots.s(book))
+    publication_lines = api.F.otype.s("publication_line")
+    publication_slots = set()
+    for line in publication_lines:
+        slots = api.E.oslots.s(line)
+        if len(slots) != 1:
+            raise ValueError("publication line must occupy exactly one native slot")
+        publication_slots.update(slots)
+    if len(publication_slots) != len(publication_lines):
+        raise ValueError("publication units must not share a single source-event slot")
+    if all_slots - scriptures != publication_slots:
+        raise ValueError("unexpected TF unit outside scripture and publication sections")
+    if any(api.F.unit_layer.v(slot) != "publication" for slot in publication_slots):
+        raise ValueError("publication slot assigned to wrong native source layer")
+    return len(publication_slots)
+
+
 def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
     from tf.fabric import Fabric
     api = Fabric(locations=[str(tf_dir.resolve())], silent="deep").load("""
-        book chapter verse faithlife_title apparatus_book_title xml_book_id xml_paragraph_total\n        morph_text morph_lemma morph_morphology
+        book chapter verse unit_layer faithlife_title apparatus_book_title xml_book_id xml_paragraph_total\n        morph_text morph_lemma morph_morphology
         morph_source_pos morph_source_parsing morph_ordinal morph_present
         faithlife_text faithlife_trailing_spaces
         plain_surface plain_start plain_end plain_ordinal
@@ -197,6 +223,8 @@ def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
             api.F.publication_link_href.v(native_link[0]) != src_link.attrib["href"] or
             api.F.publication_link_text.v(native_link[0]) != (src_link.text or "")):
         raise ValueError("source publication license hyperlink mismatch")
+
+    counts["publication_orphan_slots"] = assert_only_publication_slots_unsectioned(api)
 
     for kind, label in (("morph_word", "morph_words"),
                         ("plain_token", "plain_tokens"),
