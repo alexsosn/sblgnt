@@ -66,8 +66,8 @@ def smoke_unified(morphgnt: Path, faithlife: Path, output: Path):
     if negative:
         raise AssertionError("cross-verse or cross-book false-positive")
     # No XML or JSON blob-valued node features, native nodes for all layers.
-    for name in api.FallFeatures:
-        if name.endswith(("_xml", "_json", "_b64")):
+    for path in output.glob("*.tf"):
+        if path.stem.endswith(("_xml", "_json", "_b64")):
             raise AssertionError("serialized blob feature unexpectedly created")
 
     return {"status": "pass", "joined_query_hits": len(hits),
