@@ -47,7 +47,8 @@ class EditionVerseTests(unittest.TestCase):
     def test_faithlife_xml_does_not_conflate_xml_word_and_plaintext_token(self):
         api = FakeApi({"source_text": {400: "⸀λέγει,"}, "word": {1: "λέγει"},
                        "prefix": {1: "⸀"}, "suffix": {1: ","}},
-                      {("Mark", 1, 1): 400}, {(400, "word"): (1,)})
+                      {("Mark", 1, 1): 400},
+                      {(400, "unit"): (8,), (400, "xml_word"): (1,)})
         out = inspect_api_verse(api, "faithlife-xml", "Mark", 1, 1)
         self.assertEqual(out["text"], "⸀λέγει,")
         self.assertEqual(out["tokens"], [{"word": "λέγει", "prefix": "⸀", "suffix": ","}])
