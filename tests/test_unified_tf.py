@@ -46,6 +46,8 @@ class UnifiedSourceContracts(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "timestamp"):
                 assert_no_volatile_headers(Path(scratch))
             path.write_bytes(b"@config\n@sourceCommit=abc\n\n")
+            (Path(scratch) / ".tf").mkdir()
+            (Path(scratch) / ".tf" / "internal-cache.bin").write_bytes(b"cache")
             self.assertEqual(assert_no_volatile_headers(Path(scratch)), 1)
 
     def test_faithlife_only_john_verse_has_no_fabricated_morphology(self):
