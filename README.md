@@ -1,4 +1,12 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5807152.svg)](https://doi.org/10.5281/zenodo.5807152) [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+# SBLGNT converter
+
+## Converter-only software distribution
+
+**Our release artifact is the converter software, not a Greek NT dataset.** The [converter release guide](docs/CONVERTER_RELEASE.md) explains how to build the independently verified code-only ZIP, install Python dependencies and convert pinned local upstream source checkouts. Publishing that ZIP does **not** require permission to redistribute MorphGNT/Faithlife source data because those data are not included. The data-only approval registry (#16) is irrelevant to this software artifact.
+
+The historical repository still tracks `tf/2022`; GitHub's automatically generated repository source archives therefore **must not be described as code-only**. See [cleanup issue #33](https://github.com/alexsosn/sblgnt/issues/33). The official code-only deliverable is the allowlisted ZIP produced by `python -m scripts.package_converter`.
+
 # SBLGNT
 
 > **Maintenance fork** of [CenterBLC/SBLGNT](https://github.com/CenterBLC/SBLGNT). The historical `tf/2022` dataset is currently unchanged and has not yet been rebuilt or certified against newer Greek editions. See [maintenance research](docs/MAINTENANCE.md) and [backlog](BACKLOG.md). This fork keeps independent upstream/source licensing obligations.
