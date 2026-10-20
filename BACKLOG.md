@@ -1,5 +1,12 @@
 # Maintenance backlog
 
+## Converter-only software release track — October 2026
+- [x] Four-edition unified native TF converter and source-to-TF audit merged (#35).
+- [ ] #31/#32: reviewed converter-only ZIP/manifest and clean independent CI, including new unified modules.
+- [ ] #33: remove/migrate historical tracked `tf/2022` if GitHub's automatic source downloads should also become code-only.
+- [ ] #36: replace standalone XML converter's serialized empty-paragraph feature with native TF nodes.
+- [ ] #16: rights gate only for optional corpus-bearing releases; converter software has no such gate.
+
 GitHub Issues are currently disabled in this fork (GitHub API returns HTTP 410). This file tracks planned work until Issues are enabled. Canonical Coptic integration tracking: [CopticScriptorium-TF #93](https://github.com/alexsosn/CopticScriptorium-TF/issues/93).
 
 ## P0 — Validate legacy parent (merged PR #1)

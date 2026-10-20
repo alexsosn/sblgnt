@@ -1,5 +1,7 @@
 # Agent development workflow
 
+Release scope: distribute converter and auditor **software only**. Upstream data redistribution permissions (#16) do not block verified code-only ZIPs. The Git repository still tracks legacy `tf/2022` (#33), so GitHub automatic source downloads cannot be advertised as data-free. Maintain an exact reviewed code-file allowlist, deterministic ZIP bytes, a fresh extracted-archive CLI smoke and independent audit. Keep the unified native TF one-query E2E gate.
+
 Scope: maintain this fork as a verifiable native Text-Fabric Greek NT parent for CopticScriptorium-TF. Preserve edition/source provenance and avoid storing semantic XML/JSON blobs as TF features.
 
 - **Research:** inspect actual source data, code and license chain; identify missing evidence or uncertainties. Record an actionable source-linked finding in an issue (when Issues are enabled) or `BACKLOG.md`.

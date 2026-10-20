@@ -1,0 +1,42 @@
+name: Build converter-only software archive
+
+# This job packages only source code and docs. It neither checks out
+# upstream Greek data nor publishes any generated Text-Fabric dataset.
+# Cancel only superseded validation for the SAME pull request.
+# Independent PRs, push checks and manually requested builds stay isolated.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  converter-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run data-free archive regression tests
+        run: python -m unittest discover -s tests -p 'test_package_converter*.py' -v
+      - name: Produce first clean code-only archive
+        run: python -m scripts.package_converter --output "$RUNNER_TEMP/sblgnt-converter-first.zip"
+      - name: Independently generate second archive
+        run: python -m scripts.package_converter --output "$RUNNER_TEMP/sblgnt-converter-second.zip"
+      - name: Verify reproducible software bytes and manifest
+        run: |
+          cmp "$RUNNER_TEMP/sblgnt-converter-first.zip" "$RUNNER_TEMP/sblgnt-converter-second.zip"
+          python -m scripts.package_converter --verify "$RUNNER_TEMP/sblgnt-converter-first.zip"
+      - name: Publish only independently verified converter software
+        uses: actions/upload-artifact@v4
+        with:
+          name: sblgnt-converter-software-only
+          path: ${{ runner.temp }}/sblgnt-converter-first.zip
+          if-no-files-found: error
