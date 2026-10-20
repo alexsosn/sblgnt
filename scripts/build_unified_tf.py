@@ -317,6 +317,31 @@ def build_unified_tf(morph_root: Path, faith_root: Path, output: Path, *,
                 if counts[kind] != expected:
                     raise ValueError(f"unified native TF {kind} source count drift: {counts[kind]} != {expected}")
 
+    # Text-Fabric requires explicit metadata for EVERY native scalar feature.
+    # These are source-qualified columns on nodes; no XML/JSON/b64 content.
+    native_fields = {
+        "book", "chapter", "verse", "unit_layer", "unit_display",
+        "faithlife_title", "faithlife_text", "faithlife_trailing_spaces",
+        "xml_book_id", "xml_paragraph_total", "xml_verse_id",
+        "xml_verse_label", "xml_paragraph_ordinal", "xml_paragraph_empty",
+        "xml_word_text", "xml_word_ordinal", "xml_prefix_text",
+        "xml_suffix_text", "xml_suffix_present",
+        "morph_present", "morph_text", "morph_word_form",
+        "morph_normalized_word", "morph_lemma", "morph_morphology",
+        "morph_source_pos", "morph_source_parsing", "morph_ordinal",
+        "plain_surface", "plain_ordinal", "plain_start", "plain_end",
+        "apparatus_annotated", "apparatus_anchor_label",
+        "apparatus_anchor_ordinal", "apparatus_note_text",
+        "apparatus_note_ordinal", "publication_scope",
+        "publication_section", "publication_ordinal", "publication_text",
+        "publication_link_href", "publication_link_text",
+        *MORPH_FEATURES,
+    }
+    feature_meta = {
+        field: {"description": "Native source-qualified scalar: " + field}
+        for field in sorted(native_fields)
+    }
+
     output.parent.mkdir(parents=True, exist_ok=True)
     with TemporaryDirectory(prefix=".unified-tf-", dir=output.parent) as scratch:
         stage = Path(scratch)
@@ -338,7 +363,10 @@ def build_unified_tf(morph_root: Path, faith_root: Path, output: Path, *,
                          "xml_suffix_present", "apparatus_anchor_ordinal",
                          "apparatus_note_ordinal", "morph_present", "apparatus_annotated",
                          "faithlife_trailing_spaces", "publication_ordinal"},
-            warn=True, force=False,
+            featureMeta=feature_meta,
+            # Four publication-only slots are intentionally outside scripture
+            # book/chapter/verse sections. TF warns but retains their native nodes.
+            warn=False, force=False,
         )
         if not good:
             raise RuntimeError("native TF rejected unified source graph")
