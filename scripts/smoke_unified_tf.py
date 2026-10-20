@@ -65,13 +65,16 @@ def smoke_unified(morphgnt: Path, faithlife: Path, output: Path):
     if not hits or any(api.T.sectionFromNode(h[2]) != ("Mark", 1, 1) for h in hits):
         raise AssertionError("single joined TF search did not return expected Mark 1:1")
     # A deliberately impossible reference-scoped query should not match.
-    negative = api.S.search(
-        query.replace("book=Mark", "book=John")
-             .replace("chapter=1", "chapter=7")
-             .replace("verse=1", "verse=53")
-    )
+    negative_query = dedent("""\\
+        book book=John
+          chapter chapter=7
+            verse verse=53
+              morph_word
+    """).strip()
+    negative = api.S.search(negative_query)
     if negative:
-        raise AssertionError("cross-verse or cross-book false-positive")
+        section = api.T.sectionFromNode(negative[0][2])
+        raise AssertionError(f"MorphGNT-only missing verse falsely matched at {section}")
     # No XML or JSON blob-valued node features, native nodes for all layers.
     for path in output.glob("*.tf"):
         if path.stem.endswith(("_xml", "_json", "_b64")):
