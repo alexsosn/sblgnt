@@ -48,13 +48,15 @@ def smoke_unified(morphgnt: Path, faithlife: Path, output: Path):
     if not api.L.d(mark, otype="morph_word") or not api.L.d(mark, otype="apparatus_note"):
         raise AssertionError("source layers not embedded by canonical verse")
 
-    # One actual native TF query joins MorphGNT and official apparatus
+    # One actual native TF query joins ALL FOUR sources at a shared verse
     # as siblings under a shared canonical reference. This is NOT token identity.
     query = dedent("""\
         book book=Mark
           chapter chapter=1
             verse verse=1
               morph_word morph_lemma=ἀρχή
+              plain_token
+              xml_word
               apparatus_note
     """).strip()
     began = time.monotonic()
