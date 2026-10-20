@@ -11,11 +11,32 @@ from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 
 PACKAGE_ROOT = "sblgnt-converter"
 REQUIRED_SCRIPTS = (
-    "audit_tf.py", "build_base_tf.py", "build_faithlife_text_tf.py",
-    "build_faithlife_xml_tf.py", "build_faithlife_apparatus_tf.py",
-    "inspect_verse.py", "local_tf_app.py", "source_morphology.py",
-    "compare_morphgnt.py", "compare_tokens.py", "release_rights.py",
+    "audit_base_fields.py",
+    "audit_derived_morphology.py",
+    "audit_faithlife_apparatus_tf.py",
+    "audit_faithlife_text_tf.py",
+    "audit_faithlife_xml_tf.py",
+    "audit_tf.py",
+    "build_base_tf.py",
+    "build_faithlife_apparatus_tf.py",
+    "build_faithlife_text_tf.py",
+    "build_faithlife_xml_tf.py",
+    "compare_faithlife_refs.py",
+    "compare_faithlife_text.py",
+    "compare_morphgnt.py",
+    "compare_tokens.py",
+    "faithlife_apparatus.py",
+    "faithlife_xml.py",
+    "feature_provenance.py",
+    "inspect_verse.py",
+    "local_tf_app.py",
+    "package_converter.py",
+    "release_rights.py",
+    "smoke_local_tf_apps.py",
+    "smoke_local_verses.py",
+    "source_morphology.py",
     "stage_base_release.py",
+    "upstream_drift.py",
 )
 REQUIRED_DOCS = (
     "BASE_CONVERTER.md", "FAITHLIFE_TEXT_BASE.md",
@@ -41,9 +62,14 @@ def selected_files(root: Path):
     names = set(STATIC_FILES)
     names.update(f"docs/{name}" for name in REQUIRED_DOCS)
     names.update(f"app/profiles/{name}/config.yaml" for name in PROFILES)
-    names.update(f"scripts/{path.name}" for path in scripts.iterdir() if path.suffix == ".py")
-    if not {f"scripts/{name}" for name in REQUIRED_SCRIPTS}.issubset(names):
-        raise ValueError("missing converter modules")
+    actual_scripts = {path.name for path in scripts.iterdir() if path.suffix == ".py"}
+    reviewed_scripts = set(REQUIRED_SCRIPTS)
+    if actual_scripts != reviewed_scripts:
+        raise ValueError(
+            f"missing/unreviewed converter modules: missing={sorted(reviewed_scripts - actual_scripts)}, "
+            f"unexpected={sorted(actual_scripts - reviewed_scripts)}"
+        )
+    names.update(f"scripts/{name}" for name in REQUIRED_SCRIPTS)
     files = {}
     for name in sorted(names):
         if name.startswith(("tf/", "programs/", "upstream-")) or name.endswith((".tf", ".txt", ".ipynb", ".xlsx", ".xml")):
