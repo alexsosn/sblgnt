@@ -19,6 +19,7 @@ import xml.etree.ElementTree as ET
 from scripts.audit_tf import BOOKS
 from scripts.build_base_tf import (
     iter_source_words, validate_destination, publish_directory_no_replace,
+    strip_volatile_tf_timestamps,
 )
 from scripts.build_faithlife_text_tf import iter_faithlife_verses, tokens_in_verse
 from scripts.compare_faithlife_refs import BOOK_FILES, FAITHLIFE_COMMIT
@@ -373,6 +374,9 @@ def build_unified_tf(morph_root: Path, faith_root: Path, output: Path, *,
         )
         if not good:
             raise RuntimeError("native TF rejected unified source graph")
+        # Eliminate TF 13.1.0 wall-clock headers before atomic publication;
+        # preserve all native feature values and immutable source SHA metadata.
+        strip_volatile_tf_timestamps(stage)
         publish_directory_no_replace(stage, output)
     return {**dict(counts), "status": "local_unified_native_tf",
             "morphgnt_source_commit": MORPHGNT_COMMIT, "faithlife_source_commit": FAITHLIFE_COMMIT}
