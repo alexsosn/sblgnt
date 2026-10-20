@@ -7,7 +7,7 @@
 
 The historical repository still tracks `tf/2022`; GitHub's automatically generated repository source archives therefore **must not be described as code-only**. See [cleanup issue #33](https://github.com/alexsosn/sblgnt/issues/33). The official code-only deliverable is the allowlisted ZIP produced by `python -m scripts.package_converter`.
 
-# SBLGNT
+## Historical bundled dataset (legacy, excluded from converter ZIP)
 
 > **Maintenance fork** of [CenterBLC/SBLGNT](https://github.com/CenterBLC/SBLGNT). The historical `tf/2022` dataset is currently unchanged and has not yet been rebuilt or certified against newer Greek editions. See [maintenance research](docs/MAINTENANCE.md) and [backlog](BACKLOG.md). This fork keeps independent upstream/source licensing obligations.
 This repository contains the SBL Greek New Testament (SBLGNT) in a TextFabric format. As a source for the CBLC version of SBLGNT we have used the version from MorphGNT as it is made available in their repository "sblgnt" (https://github.com/morphgnt/sblgnt). We have then converted the txt files into the TextFabric format (see https://github.com/CenterBLC/SBLGNT/tree/main/programs). This allows TF users to access the SBLGNT text in a convenient way and query it.
