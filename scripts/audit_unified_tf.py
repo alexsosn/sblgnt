@@ -45,7 +45,25 @@ def assert_only_publication_slots_unsectioned(api):
     return len(publication_slots)
 
 
+def assert_no_volatile_headers(tf_dir: Path):
+    """Reject TF writer clock metadata without reading source text payloads."""
+    count = 0
+    for path in tf_dir.glob("*.tf"):
+        count += 1
+        with path.open("rb") as stream:
+            for line in stream:
+                bare = line.rstrip(bytes((13, 10)))
+                if bare.startswith(b"@dateWritten="):
+                    raise ValueError("non-reproducible unified TF writer timestamp")
+                if bare and not bare.startswith(b"@"):
+                    break
+    if not count:
+        raise ValueError("no unified native TF feature files to audit")
+    return count
+
+
 def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
+    canonical_feature_count = assert_no_volatile_headers(tf_dir)
     from tf.fabric import Fabric
     api = Fabric(locations=[str(tf_dir.resolve())], silent="deep").load("""
         book chapter verse unit_layer faithlife_title apparatus_book_title xml_book_id xml_paragraph_total\n        morph_text morph_lemma morph_morphology
@@ -62,6 +80,7 @@ def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
     if not api:
         raise RuntimeError("cannot independently reload native unified TF")
     counts = Counter()
+    counts["canonical_tf_feature_files"] = canonical_feature_count
     # Independently iterate actual source lines, don't trust converter's
     # intermediate records or its internal counters.
     for ref, stream in groupby(iter_source_words(morph_source),
