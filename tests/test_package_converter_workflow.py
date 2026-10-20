@@ -20,6 +20,12 @@ class SoftwareWorkflowTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, content)
 
+    def test_pr_concurrency_cancels_only_same_pr_not_main(self):
+        content = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("github.event.pull_request.number", content)
+        self.assertIn("github.run_id", content)
+        self.assertIn("cancel-in-progress: ${{ github.event_name == 'pull_request' }}", content)
+
     def test_two_builds_must_be_compared_and_exact_archive_verified(self):
         content = WORKFLOW.read_text(encoding="utf-8")
         self.assertEqual(content.count("python -m scripts.package_converter --output"), 2)
