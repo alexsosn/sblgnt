@@ -10,11 +10,11 @@ typeDisplay:
   verse:
     featuresBare:
       - source_text
-  word:
+  xml_word:
     featuresBare:
       - paragraph_ordinal
       - prefix
       - suffix
 provenanceSpec:
   version: candidate-local
-  corpus: "Faithlife SBLGNT v1.2 XML words (LOCAL CANDIDATE)"
+  corpus: "Faithlife SBLGNT v1.2 native XML words+paragraphs (LOCAL CANDIDATE)"
