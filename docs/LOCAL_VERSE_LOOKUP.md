@@ -27,7 +27,7 @@ Every invocation checks the exact pinned source SHA **and** the converter identi
 
 - `morphgnt`: MorphGNT `text` tokens, raw `lemma` and raw `morphology`. Its joined `text` field is marked `display-only`; joining words with spaces is not an exact source-verse whitespace reconstruction.
 - `faithlife-text`: official source verse text (`source-exact`, excluding separately represented terminal line padding) and orthographic whitespace-delimited `surface` tokens, **not** MorphGNT word identities.
-- `faithlife-xml`: official source verse text with XML `word`, `prefix`, and `suffix` components. These words are not guaranteed to correspond 1:1 to Faithlife plaintext or MorphGNT whitespace tokens.
+- `faithlife-xml`: official source verse text with native `xml_word` nodes and `word`, `prefix`, `suffix` scalar features. Each word is backed by a `unit` source-occurrence slot. Book-scoped empty-paragraph marker slots do not belong to scripture verses and never appear as Greek words in this CLI. These words are not guaranteed to correspond 1:1 to Faithlife plaintext or MorphGNT tokens.
 - `faithlife-apparatus`: ordered, verbatim opaque official `note_text` records on annotated verses; these are not inferred variants or parsed witnesses.
 
 This is a **headless local inspection interface**, not an edition-specific web/TF app release. The inherited `app/config.yaml` still describes legacy 2022. Do not select a new candidate using the old `app/config.yaml` and infer that `gloss`, `strongs`, or `sentence` exists.

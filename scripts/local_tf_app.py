@@ -12,7 +12,7 @@ from scripts.inspect_verse import EDITIONS, validate_source_pin
 APP_FEATURES = {
     "morphgnt": "book chapter verse text lemma morphology morph_pos morph_case morph_number morph_gender",
     "faithlife-text": "book chapter verse title source_text surface ordinal",
-    "faithlife-xml": "book chapter verse title source_text word prefix suffix paragraph_ordinal",
+    "faithlife-xml": "book chapter verse title source_text word prefix suffix paragraph_ordinal paragraph paragraph_empty unit_kind unit_display",
     "faithlife-apparatus": "book chapter verse title anchor_label note_text note_ordinal",
 }
 

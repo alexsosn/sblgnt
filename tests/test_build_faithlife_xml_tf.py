@@ -37,7 +37,20 @@ class NativeXmlModel(unittest.TestCase):
         self.assertEqual([row.prefix for row in rows], [" ⸀", "", "", "", ""])
         self.assertEqual([row.suffix for row in rows], ["", ". ", "", ". ", ". "])
         self.assertEqual(paragraph_metadata(source),
-                         (5, "[2,5]", 3))
+                         (5, (2, 5), 3))
+
+    def test_native_paragraph_model_includes_empty_boundaries(self):
+        from scripts.build_faithlife_xml_tf import native_paragraph_inventory
+        source = self.fixture()
+        paragraphs = native_paragraph_inventory(source)
+        self.assertEqual(len(paragraphs), 5)
+        self.assertEqual(
+            [(p.ordinal, p.empty) for p in paragraphs],
+            [(1, False), (2, True), (3, False), (4, False), (5, True)],
+        )
+        # XML words in a paragraph can cross canonical verse boundaries.
+        self.assertEqual(paragraphs[0].word_count, 3)
+        self.assertEqual(paragraphs[1].word_count, 0)
 
     def test_duplicate_or_retrograde_paragraph_words_rejected(self):
         source = self.fixture()
