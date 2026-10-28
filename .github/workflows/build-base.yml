@@ -117,6 +117,14 @@ jobs:
           --faithlife-dir upstream-faithlife
           --tf-dir "$RUNNER_TEMP/unified-native-tf"
           --report "$RUNNER_TEMP/unified-native-tf-content-audit.json"
+      - name: Exercise one local unified advanced app A.search and A.pretty on all real source layers
+        run: >-
+          python -m scripts.smoke_local_tf_apps
+          --morphgnt "$RUNNER_TEMP/sblgnt-generated"
+          --faithlife-text "$RUNNER_TEMP/faithlife-text-tf"
+          --faithlife-xml "$RUNNER_TEMP/faithlife-xml-word-tf"
+          --faithlife-apparatus "$RUNNER_TEMP/faithlife-apparatus-tf"
+          --unified "$RUNNER_TEMP/unified-native-tf"
       - name: End-user E2E conversion from verified extracted software-only ZIP
         shell: bash
         run: |
@@ -132,6 +140,12 @@ jobs:
               --faithlife-dir "$GITHUB_WORKSPACE/upstream-faithlife" \
               --output "$RUNNER_TEMP/unified-from-extracted-zip" \
               --report "$RUNNER_TEMP/unified-extracted-e2e.json"
+            PYTHONPATH= python -m scripts.smoke_local_tf_apps \
+              --morphgnt "$RUNNER_TEMP/sblgnt-generated" \
+              --faithlife-text "$RUNNER_TEMP/faithlife-text-tf" \
+              --faithlife-xml "$RUNNER_TEMP/faithlife-xml-word-tf" \
+              --faithlife-apparatus "$RUNNER_TEMP/faithlife-apparatus-tf" \
+              --unified "$RUNNER_TEMP/unified-from-extracted-zip"
           )
           # Must compare BOTH exact file inventory and exact feature bytes.
           # Neither check prints the underlying Greek source content.
