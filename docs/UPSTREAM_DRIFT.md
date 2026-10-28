@@ -34,9 +34,26 @@ closed is *not* taken as evidence that the pinned corpus text,
 morphology, or source revision changed; issues are not automatically
 applied as textual corrections.
 
-A changed source SHA causes the watcher to return status code 2, so
-GitHub Actions signals a meaningful drift. The workflow still uploads
-the source-free result. A GitHub API error, malformed response,
+An **unreviewed** changed source SHA causes the watcher to return status
+code 2, so GitHub Actions signals an actionable drift. The JSON report
+still includes every changed upstream SHA and all affected paths, even
+when the change is explicitly acknowledged and non-actionable.
+
+On 2026-10-25, Faithlife/SBLGNT HEAD advanced from the immutable converter
+pin `c4d241a9...` to `d7f35adca9ec410e1d1499c63b4dd989d76c8d4d`.
+The exact GitHub compare contains **two typographical fixes only**:
+`About.md` ("indentifying" → "identifying") and `README.md`
+("Adulturae" → "Adulterae"). There were no changes to Greek text,
+apparatus, XML, license terms, or source inventory. This **exact**
+immutable SHA and **exact** two-path set is acknowledged in
+`REVIEWED_METADATA_DRIFT`; the report continues to say
+`any_source_drift: true`, while its `drift_alert` states
+`action_required: false` and CI exits 0. The corpus input stays pinned.
+
+A future README edit, LICENSE edit, other changed path, new HEAD SHA,
+MorphGNT revision, or changed Greek/XML/apparatus source is **not**
+automatically acknowledged and must trigger an actionable alert.
+The workflow still uploads the source-free result. A GitHub API error, malformed response,
 unexpected file inventory or truncated Git tree instead fails with a
 clear error; it never reports an unverified clean result. This workflow
 does not create tickets on its own, change any source pin, auto-merge
