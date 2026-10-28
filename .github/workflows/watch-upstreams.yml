@@ -7,6 +7,7 @@ on:
       - ".github/workflows/watch-upstreams.yml"
       - "scripts/upstream_drift.py"
       - "tests/test_upstream_drift.py"
+      - "tests/test_acknowledged_upstream_drift.py"
       - "tests/test_upstream_drift_workflow.py"
   schedule:
     - cron: "17 7 * * 1"
@@ -30,6 +31,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Verify drift triage fail-closed regressions
+        run: python -m unittest discover -s tests -p "test_*upstream_drift*.py" -v
       - name: Compare pinned upstream Git trees and unresolved errata (read only)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
