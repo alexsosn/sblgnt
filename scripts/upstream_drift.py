@@ -26,6 +26,19 @@ LOCKS = {
     },
 }
 ERRATA = (58, 62, 69, 70, 71, 74)
+
+# Manually compared the complete 2026-10-25 Faithlife commit with the
+# immutable converter pin. Exactly two spelling corrections, in About.md
+# and README.md; no source book, apparatus, license, or copyright change.
+# DO NOT generalize this exception to every future documentation change.
+REVIEWED_METADATA_DRIFT = {
+    "Faithlife/SBLGNT": {
+        "pinned_sha": "c4d241a9c1c479a55b989ba35a4976c1d0b8052c",
+        "head_sha": "d7f35adca9ec410e1d1499c63b4dd989d76c8d4d",
+        "changed_paths": ("About.md", "README.md"),
+        "review": "2026-10-25 typo corrections only; checked full GitHub compare",
+    },
+}
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 MORPH_FILE_RE = re.compile(r"^([6-8][0-9])-[^/]+-morphgnt\.txt$")
 FAMILIES = (
@@ -182,6 +195,52 @@ def compare_snapshots(refs: dict, issues: dict) -> dict:
     }
 
 
+def assess_drift_alert(report: dict) -> dict:
+    """Classify upstream HEAD differences without erasing revision provenance.
+
+    Only an *exact* reviewed immutable commit and original path set is
+    acknowledged; no arbitrary metadata-only or rights changes are exempted.
+    An acknowledged upstream commit still counts as source revision drift
+    in the report. This function controls only the alert/CI exit severity.
+    """
+    if not isinstance(report, dict) or not isinstance(report.get("by_repo"), dict):
+        raise ValueError("invalid upstream drift report")
+    rows = report["by_repo"]
+    if set(rows) != set(LOCKS):
+        raise ValueError("missing source repository in drift report")
+    acknowledged = []
+    unreviewed = []
+    for repository, lock in LOCKS.items():
+        row = rows[repository]
+        if row["pinned_sha"] != lock["sha"]:
+            raise ValueError("inconsistent pinned revision in drift report")
+        changed = row["source_changed"]
+        if changed != (row["current_sha"] != row["pinned_sha"]):
+            raise ValueError("inconsistent source-change marker in drift report")
+        if not changed:
+            continue
+        approved = REVIEWED_METADATA_DRIFT.get(repository)
+        if (
+            approved is not None
+            and approved["pinned_sha"] == row["pinned_sha"]
+            and approved["head_sha"] == row["current_sha"]
+            and tuple(sorted(approved["changed_paths"])) == tuple(row["changed_paths"])
+            and row["changed_families"] == {"rights_metadata": len(approved["changed_paths"])}
+        ):
+            acknowledged.append(repository)
+        else:
+            unreviewed.append(repository)
+    return {
+        "action_required": bool(unreviewed),
+        "acknowledged_repositories": acknowledged,
+        "unreviewed_repositories": unreviewed,
+        "note": (
+            "Acknowledged HEAD still differs from pinned corpus input; "
+            "unknown metadata, license or source changes always require review"
+        ),
+    }
+
+
 class GithubReadOnly:
     """Minimal GitHub API GET client, with explicit errors and bounded timeouts."""
     def __init__(self, *, token: str | None = None, timeout: int = 20):
@@ -267,12 +326,13 @@ def main() -> int:
     refs, issues, inventory = read_live_snapshots(client)
     report = compare_snapshots(refs, issues)
     report["source_inventory"] = inventory
+    report["drift_alert"] = assess_drift_alert(report)
     content = json.dumps(report, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
     if a.report:
         a.report.parent.mkdir(parents=True, exist_ok=True)
         a.report.write_text(content, encoding="utf-8")
     print(content, end="")
-    return 0 if not report["any_source_drift"] else 2
+    return 2 if report["drift_alert"]["action_required"] else 0
 
 
 if __name__ == "__main__":
