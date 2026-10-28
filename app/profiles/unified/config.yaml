@@ -1,0 +1,35 @@
+# One local native graph containing MorphGNT and three Faithlife layers.
+# Same verse = source co-occurrence, NEVER automatic word alignment.
+apiVersion: 3
+writing: grc
+dataDisplay:
+  textFormat: text-orig-full
+typeDisplay:
+  book:
+    featuresBare:
+      - book
+  verse:
+    featuresBare:
+      - faithlife_text
+  morph_word:
+    featuresBare:
+      - morph_lemma
+      - morph_morphology
+  plain_token:
+    featuresBare:
+      - plain_surface
+  xml_word:
+    featuresBare:
+      - xml_word_text
+  xml_prefix:
+    featuresBare:
+      - xml_prefix_text
+  xml_suffix:
+    featuresBare:
+      - xml_suffix_text
+  apparatus_note:
+    featuresBare:
+      - apparatus_note_text
+provenanceSpec:
+  version: candidate-local
+  corpus: "SBLGNT unified local four-source native TF (candidate)"
