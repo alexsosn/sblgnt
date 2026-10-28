@@ -95,6 +95,10 @@ def validate_unified_source_pins(tf_dir: Path) -> None:
         for line in stream:
             if not line.strip():
                 break
+            # Text-Fabric's otext.tf starts with the bare '@config'
+            # directive, which is valid and intentionally has no '='.
+            if line.rstrip("\r\n") == "@config":
+                continue
             if not line.startswith("@") or "=" not in line:
                 raise ValueError("invalid local unified TF source metadata header")
             key, value = line[1:].rstrip("\r\n").split("=", 1)
