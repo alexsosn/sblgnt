@@ -102,6 +102,17 @@ class NativeUnifiedAppTests(unittest.TestCase):
                 api=api, silent="deep",
             )
 
+    def test_real_ci_exercises_advanced_app_from_checkout_and_zip(self):
+        text = (Path(__file__).resolve().parents[1] /
+                ".github/workflows/build-base.yml").read_text(encoding="utf-8")
+        self.assertIn(
+            '--unified "$RUNNER_TEMP/unified-native-tf"', text
+        )
+        self.assertIn(
+            '--unified "$RUNNER_TEMP/unified-from-extracted-zip"', text
+        )
+        self.assertIn("A.search and A.pretty", text)
+
     def test_wrong_warp_rejected_before_advanced_app_render(self):
         with TemporaryDirectory() as d:
             root = Path(d)
