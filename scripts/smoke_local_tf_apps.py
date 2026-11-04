@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 
 from scripts.local_tf_app import load_local_app, load_local_unified_app
+from scripts.smoke_local_verses import run_unified_cli_smoke
 
 
 def run_smoke(dirs: dict[str, Path]) -> dict:
@@ -94,10 +95,16 @@ def run_unified_smoke(unified_dir: Path) -> dict:
             )
             if negative or api.L.d(john, otype="morph_word"):
                 raise AssertionError("fabricated John 7:53 morphology")
+            hit_count = len(hits)
+            # End-user subprocess test: inspect a verse through the local CLI
+            # rather than assuming that high-level app calls prove CLI works.
+            stage = "unified-verse-cli"
+            cli_smoke = run_unified_cli_smoke(unified_dir)
     except Exception as exc:
         raise RuntimeError(f"unified/{stage}: {type(exc).__name__}") from None
-    return {"status": "pass", "advanced_search_hits": len(hits),
-            "advanced_query_layers": 4, "pretty_verse_count": 1}
+    return {"status": "pass", "advanced_search_hits": hit_count,
+            "advanced_query_layers": 4, "pretty_verse_count": 1,
+            "cli_lookups": cli_smoke["lookups"]}
 
 
 
