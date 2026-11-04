@@ -62,6 +62,25 @@ apparatus note text has no nested source XML structure; a native scalar
 `apparatus_note_text` stores the complete original note verbatim
 without implying that textual witnesses or variants have been parsed.
 
+## Local one-command verse inspection
+
+After generating the native graph with the pinned inputs above, inspect
+all four source layers through the same existing read-only CLI:
+
+```bash
+python -m scripts.inspect_verse --edition unified \
+  --tf-dir /tmp/sblgnt-unified --book Mark --chapter 1 --verse 1
+```
+
+Its JSON includes independent MorphGNT, Faithlife plaintext and XML token
+records, original XML prefix/suffix and paragraph ordinals, and verbatim
+apparatus notes at that canonical verse. It explicitly marks absent MorphGNT
+morphology at John 7:53 and absent apparatus annotations separately from
+verse omission. The CLI uses **native shared XML word source units** for
+prefix/suffix association, never a speculative MorphGNT↔Faithlife word
+alignment. It requires both immutable source pins, runs offline, and does
+not publish any corpus. See [local verse lookup](LOCAL_VERSE_LOOKUP.md).
+
 ## Validation
 
 The required source-base CI creates this output from actual immutable
