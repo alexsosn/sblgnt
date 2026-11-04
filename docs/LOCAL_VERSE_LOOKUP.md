@@ -23,7 +23,40 @@ python -m scripts.inspect_verse --edition faithlife-apparatus \
   --tf-dir /tmp/faithlife-apparatus-tf --book Mark --chapter 1 --verse 1
 ```
 
-Every invocation checks the exact pinned source SHA **and** the converter identity in `otext.tf` before loading TF features. The returned JSON explicitly identifies its edition, source revision, verse reference, source-specific slot kind and status. A requested MorphGNT verse that is not in that source is reported as `absent`; a verse without a Faithlife critical-apparatus entry is `unannotated`, **not** evidence that the text itself is omitted. Faithlife 1.2 includes John 7:53–8:11, while MorphGNT 6.12 lacks morphological records for it.
+## One-verse inspection across all four layers in one native graph
+
+Generate your own **unified** corpus from pinned MorphGNT and Faithlife source checkouts
+using [the unified build instructions](UNIFIED_NATIVE_TF.md), then run:
+
+```bash
+python -m scripts.inspect_verse --edition unified \
+  --tf-dir /tmp/sblgnt-unified --book Mark --chapter 1 --verse 1
+
+# Official John 7:53 exists, but MorphGNT morphology is absent:
+python -m scripts.inspect_verse --edition unified \
+  --tf-dir /tmp/sblgnt-unified --book John --chapter 7 --verse 53
+```
+
+The unified JSON contains the official `text` (`source-exact`, excluding
+separately tracked trailing line padding) and an explicit `layers` object
+with independent `morphgnt`, `faithlife-text`, `faithlife-xml`
+and `faithlife-apparatus` records. MorphGNT tokens keep their source text,
+lemma and morphology; Faithlife plaintext tokens retain their own surfaces.
+Original XML words retain per-word prefix, suffix and paragraph ordinal
+using **shared native XML source-unit identity**; they are not aligned
+to MorphGNT or orthographic tokens. Apparatus notes remain verbatim and
+ordered, with `unannotated` distinct from a missing textual verse.
+The `join_semantics` field is always `verse-cooccurrence-only`.
+The output may contain original Greek text and apparatus; use locally and
+do not upload it as a CI artifact.
+
+The standalone inspector checks each edition's exact pinned source SHA
+and converter identity in `otext.tf`; the unified inspector checks
+**both** immutable source SHAs and the unified converter identity and requires
+a native `unit` warp. These metadata identity checks do not authenticate
+source bytes; use the independent full-source auditor for research-grade parity.
+
+The returned JSON explicitly identifies its edition, source revision, verse reference, source-specific slot kind and status. A requested MorphGNT verse that is not in that source is reported as `absent`; a verse without a Faithlife critical-apparatus entry is `unannotated`, **not** evidence that the text itself is omitted. Faithlife 1.2 includes John 7:53–8:11, while MorphGNT 6.12 lacks morphological records for it.
 
 - `morphgnt`: MorphGNT `text` tokens, raw `lemma` and raw `morphology`. Its joined `text` field is marked `display-only`; joining words with spaces is not an exact source-verse whitespace reconstruction.
 - `faithlife-text`: official source verse text (`source-exact`, excluding separately represented terminal line padding) and orthographic whitespace-delimited `surface` tokens, **not** MorphGNT word identities.
