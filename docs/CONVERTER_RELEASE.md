@@ -52,7 +52,7 @@ The source checkout must match the **exact pinned commit**; the output
 directory must be new and outside the checkout. For the Faithlife plaintext,
 native XML-word and apparatus converters see the separate guides in this ZIP.
 
-You may also load locally generated TF with the four edition profiles
+You may load locally generated TF with the four standalone profiles or the fifth unified advanced-app profile
 (`scripts.local_tf_app`), query verses via `scripts.inspect_verse`,
 or validate local candidates against original source checkouts. None of
 those operations implies morphological or textual identity across editions.
@@ -78,4 +78,4 @@ software-license review in the converter release process.
 
 ## Unified native Text-Fabric corpus
 
-The software ZIP also contains `scripts.build_unified_tf`, `scripts.audit_unified_tf`, `scripts.smoke_unified_tf` and [the unified schema and query guide](UNIFIED_NATIVE_TF.md). Users provide their own pinned MorphGNT and Faithlife checkouts. All four editions can then be converted locally into one native TF graph, queried with one `api.S.search()`. No Greek corpus or XML/JSON blob features are bundled.
+The software ZIP also contains `scripts.build_unified_tf`, `scripts.audit_unified_tf`, `scripts.smoke_unified_tf` and [the unified schema and query guide](UNIFIED_NATIVE_TF.md). Users provide their own pinned MorphGNT and Faithlife checkouts. All four editions can then be converted locally into one native TF graph, queried with one `api.S.search()` or one high-level `A.search()` via `load_local_unified_app`. No Greek corpus or XML/JSON blob features are bundled.

@@ -47,7 +47,7 @@ REQUIRED_DOCS = (
     "LOCAL_TF_APPS.md", "LOCAL_VERSE_LOOKUP.md", "RELEASE_RIGHTS.md",
     "CONVERTER_RELEASE.md", "UNIFIED_NATIVE_TF.md",
 )
-PROFILES = ("morphgnt", "faithlife-text", "faithlife-xml", "faithlife-apparatus")
+PROFILES = ("morphgnt", "faithlife-text", "faithlife-xml", "faithlife-apparatus", "unified")
 STATIC_FILES = ("README.md", "LICENSE", "release/source_rights.json")
 MANIFEST = "SOFTWARE_MANIFEST.json"
 

@@ -91,3 +91,39 @@ sectionless native source-unit slots, rather than assigning publication
 lines to a fabricated Bible verse. The independent full-source audit
 now checks that **those four are the only units outside canonical book
 nodes**; empty XML paragraph markers belong to the source book only.
+
+## Local advanced-app interface: one `A.search()`
+
+After generating the unified native TF directory, use the **fifth**
+local-only advanced app profile (all four original source layers together):
+
+```python
+from pathlib import Path
+from scripts.local_tf_app import load_local_unified_app
+
+A = load_local_unified_app(Path("/tmp/sblgnt-unified"))
+hits = A.search("""
+book book=Mark
+  chapter chapter=1
+    verse verse=1
+      morph_word morph_lemma=ἀρχή
+      plain_token
+      xml_word
+      apparatus_note
+""", limit=64)
+verse = A.api.T.nodeFromSection(("Mark", 1, 1))
+A.pretty(verse)
+```
+
+`A.search` returns an eagerly materialized, sorted list of node tuples,
+unlike `A.api.S.search`, which returns a lazy generator in TF 13.1.0.
+All four source layers appear as distinct native node types embedded in
+the same scripture verse; a join implies **verse co-occurrence only**,
+never validated MorphGNT-to-Faithlife word correspondence.
+
+This app only uses a caller-provided local corpus and an explicit profile
+in `app/profiles/unified/`; it performs **no download**. The loader checks
+the two exact source SHAs, unified converter identity, and native `unit`
+slot type before initializing the app. These metadata checks identify an
+edition; they do not prove source-byte authenticity. Run the independent
+full-source auditor when publication-quality parity is required.
