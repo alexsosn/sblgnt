@@ -32,10 +32,36 @@ GNT = use("alexsosn/sblgnt", version="2022")
 
 ## Inspect a local pinned edition
 
-For actual local Text-Fabric advanced-app display in notebooks, see [four offline edition-specific app profiles](docs/LOCAL_TF_APPS.md), which use a caller-provided native TF directory and never fetch source data. The historical `use("alexsosn/sblgnt", version="2022")` example above loads the **legacy** edition. For newer, source-pinned candidate builds, use the [edition-qualified local verse inspector](docs/LOCAL_VERSE_LOOKUP.md). It reads MorphGNT word/morphology, official Faithlife plaintext, official XML word boundaries, or critical-apparatus notes without conflating them. Those new candidate datasets are **not yet distributed**; publication is held by the [source-rights gate](docs/RELEASE_RIGHTS.md).
+For actual local Text-Fabric advanced-app display in notebooks, see the [four standalone edition-specific profiles and fifth combined local profile](docs/LOCAL_TF_APPS.md). All five use caller-provided native TF directories without downloading source data. The historical `use("alexsosn/sblgnt", version="2022")` example above loads the **legacy** edition. For newer, source-pinned candidate builds, use the [edition-qualified local verse inspector](docs/LOCAL_VERSE_LOOKUP.md). It reads MorphGNT word/morphology, official Faithlife plaintext, official XML word boundaries, or critical-apparatus notes without conflating them. Those new candidate datasets are **not yet distributed**; publication is held by the [source-rights gate](docs/RELEASE_RIGHTS.md).
 
 ## Unified four-edition Text-Fabric (local conversion)
 
-You can now generate **one native TF graph** from pinned MorphGNT and Faithlife source checkouts, with MorphGNT morphology, official plaintext/orthographic tokens, original XML word/prefix/suffix/paragraph markup, and sparse apparatus notes. It supports one cross-edition `api.S.search()` template over a shared canonical verse hierarchy. All original XML structures are native TF nodes/features; no XML/JSON blobs are encoded into features. **No upstream Greek dataset is bundled.**
+You can now generate **one native TF graph** from pinned MorphGNT and Faithlife source checkouts, with MorphGNT morphology, official plaintext/orthographic tokens, original XML word/prefix/suffix/paragraph markup, and sparse apparatus notes. It supports one cross-edition native `api.S.search()` template or one advanced-app `A.search()` template over a shared canonical verse hierarchy, plus `A.pretty()` rendering. All original XML structures are native TF nodes/features; no XML/JSON blobs are encoded into features. **No upstream Greek dataset is bundled.**
 
-See [conversion commands, native schema and a four-layer query example](docs/UNIFIED_NATIVE_TF.md). Word-token identities remain edition-specific and are never inferred from a shared verse.
+After building the local unified corpus (see the guide above), search all four
+source layers through the fifth advanced-app profile:
+
+```python
+from pathlib import Path
+from scripts.local_tf_app import load_local_unified_app
+
+A = load_local_unified_app(Path("/tmp/sblgnt-unified"))
+matches = A.search("""
+book book=Mark
+  chapter chapter=1
+    verse verse=1
+      morph_word morph_lemma=ἀρχή
+      plain_token
+      xml_word
+      apparatus_note
+""", limit=64)
+A.pretty(A.api.T.nodeFromSection(("Mark", 1, 1)))
+```
+
+This is an **offline local candidate** using the caller's pinned source
+checkouts and generated TF data; it does not install or publish a new corpus.
+The four source layers share verse coordinates, but there is **no word-level alignment**
+or inferred identity between morphology and Faithlife tokens. See the
+[full local advanced-app contract](docs/LOCAL_TF_APPS.md) and
+[unified-native guide](docs/UNIFIED_NATIVE_TF.md) for source pins, validation
+and the important John 7:53–8:11 coverage difference.
