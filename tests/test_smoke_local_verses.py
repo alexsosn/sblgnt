@@ -4,7 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from scripts.smoke_local_verses import cli
+from scripts.smoke_local_verses import cli, run_unified_cli_smoke
 
 
 class SmokeSubprocessTests(unittest.TestCase):
@@ -25,6 +25,52 @@ class SmokeSubprocessTests(unittest.TestCase):
                 cli(Path('/tmp/example'), 'faithlife-apparatus', 'Mark', 1, 1)
         self.assertNotIn(secret, str(caught.exception))
         self.assertIn('faithlife-apparatus Mark 1:1', str(caught.exception))
+
+
+    def test_unified_end_user_smoke_checks_three_distinct_source_semantics(self):
+        mark = {
+            "status": "present", "text": "Ἀρχὴ", "text_fidelity": "source-exact",
+            "join_semantics": "verse-cooccurrence-only",
+            "layers": {
+                "morphgnt": {"status": "present", "tokens": [{"lemma": "ἀρχή"}]},
+                "faithlife-text": {"status": "present", "tokens": [{"surface": "Ἀρχὴ"}]},
+                "faithlife-xml": {"status": "present", "words": [{"word": "Ἀρχὴ"}]},
+                "faithlife-apparatus": {"status": "annotated", "notes": ["WH"]},
+            },
+        }
+        john = {
+            "status": "present",
+            "layers": {
+                "morphgnt": {"status": "absent"},
+                "faithlife-text": {"status": "present", "tokens": [{"surface": "X"}]},
+                "faithlife-xml": {"status": "present"},
+            },
+        }
+        no_note = {
+            "status": "present",
+            "layers": {
+                "faithlife-apparatus": {"status": "unannotated", "notes": []},
+            },
+        }
+        with patch("scripts.smoke_local_verses.cli",
+                   side_effect=(mark, john, no_note)) as invoke:
+            report = run_unified_cli_smoke(Path("/tmp/unified"))
+        self.assertEqual(report, {"status": "pass", "layers": 4, "lookups": 3})
+        self.assertEqual([
+            (call.args[1], call.args[2], call.args[3], call.args[4])
+            for call in invoke.call_args_list
+        ], [("unified", "Mark", 1, 1),
+            ("unified", "John", 7, 53),
+            ("unified", "Mark", 1, 3)])
+
+        # An annotated-free verse must not be described as a missing verse.
+        bad_note = {"status": "present",
+                    "layers": {"faithlife-apparatus": {"status": "absent"}}}
+        with patch("scripts.smoke_local_verses.cli",
+                   side_effect=(mark, john, bad_note)):
+            with self.assertRaisesRegex(AssertionError, "unannotated"):
+                run_unified_cli_smoke(Path("/tmp/unified"))
+
 
 
 if __name__ == '__main__':

@@ -38,6 +38,17 @@ For actual local Text-Fabric advanced-app display in notebooks, see the [four st
 
 You can now generate **one native TF graph** from pinned MorphGNT and Faithlife source checkouts, with MorphGNT morphology, official plaintext/orthographic tokens, original XML word/prefix/suffix/paragraph markup, and sparse apparatus notes. It supports one cross-edition native `api.S.search()` template or one advanced-app `A.search()` template over a shared canonical verse hierarchy, plus `A.pretty()` rendering. All original XML structures are native TF nodes/features; no XML/JSON blobs are encoded into features. **No upstream Greek dataset is bundled.**
 
+To inspect a single verse as source-qualified JSON from the same native
+graph, run (after building the unified corpus):
+
+```bash
+python -m scripts.inspect_verse --edition unified \
+  --tf-dir /tmp/sblgnt-unified --book Mark --chapter 1 --verse 1
+```
+
+The records remain source-specific; see [CLI details](docs/LOCAL_VERSE_LOOKUP.md).
+No Greek output is uploaded by the automated tests.
+
 After building the local unified corpus (see the guide above), search all four
 source layers through the fifth advanced-app profile:
 

@@ -57,6 +57,48 @@ def run_smoke(morph: Path, text: Path, xml: Path, apparatus: Path) -> dict:
             "checked": "John 7:53 / Mark 1:1 / unannotated Mark 1:3"}
 
 
+
+def run_unified_cli_smoke(unified: Path) -> dict:
+    """Exercise the real one-command unified CLI, discard source text in CI."""
+    mark = cli(unified, "unified", "Mark", 1, 1)
+    layers = mark.get("layers", {})
+    if (mark.get("status") != "present"
+            or mark.get("join_semantics") != "verse-cooccurrence-only"
+            or mark.get("text_fidelity") != "source-exact"
+            or not mark.get("text")
+            or set(layers) != {
+                "morphgnt", "faithlife-text", "faithlife-xml",
+                "faithlife-apparatus",
+            }
+            or any(layers[k].get("status") != "present" for k in (
+                "morphgnt", "faithlife-text", "faithlife-xml",
+            ))
+            or not layers["morphgnt"].get("tokens")
+            or not layers["faithlife-text"].get("tokens")
+            or not layers["faithlife-xml"].get("words")
+            or layers["faithlife-apparatus"].get("status") != "annotated"
+            or not layers["faithlife-apparatus"].get("notes")):
+        raise AssertionError("unified real Mark 1:1 missing one source layer")
+
+    john = cli(unified, "unified", "John", 7, 53)
+    jl = john.get("layers", {})
+    if (john.get("status") != "present"
+            or jl.get("morphgnt") != {"status": "absent"}
+            or jl.get("faithlife-text", {}).get("status") != "present"
+            or jl.get("faithlife-xml", {}).get("status") != "present"
+            or not jl.get("faithlife-text", {}).get("tokens")):
+        raise AssertionError("unified CLI invents MorphGNT John morphology")
+
+    unannotated = cli(unified, "unified", "Mark", 1, 3)
+    if (unannotated.get("status") != "present"
+            or unannotated.get("layers", {}).get("faithlife-apparatus") != {
+                "status": "unannotated", "notes": [],
+            }):
+        raise AssertionError("unified CLI mislabels an unannotated verse")
+    return {"status": "pass", "layers": 4, "lookups": 3}
+
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     for name in ("morphgnt", "faithlife-text", "faithlife-xml", "faithlife-apparatus"):
