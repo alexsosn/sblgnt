@@ -34,15 +34,20 @@ GNT = use("alexsosn/sblgnt", version="2022")
 
 For actual local Text-Fabric advanced-app display in notebooks, see the [four standalone edition-specific profiles and fifth combined local profile](docs/LOCAL_TF_APPS.md). All five use caller-provided native TF directories without downloading source data. The historical `use("alexsosn/sblgnt", version="2022")` example above loads the **legacy** edition. For newer, source-pinned candidate builds, use the [edition-qualified local verse inspector](docs/LOCAL_VERSE_LOOKUP.md). It reads MorphGNT word/morphology, official Faithlife plaintext, official XML word boundaries, or critical-apparatus notes without conflating them. Those new candidate datasets are **not yet distributed**; publication is held by the [source-rights gate](docs/RELEASE_RIGHTS.md).
 
-For a one-command JSON view of all four source layers at the same verse,
-use `python -m scripts.inspect_verse --edition unified --tf-dir /tmp/sblgnt-unified
---book Mark --chapter 1 --verse 1` after building the unified corpus.
-This preserves each source's separate word identity and keeps the Greek
-output local; see [CLI details](docs/LOCAL_VERSE_LOOKUP.md).
-
 ## Unified four-edition Text-Fabric (local conversion)
 
 You can now generate **one native TF graph** from pinned MorphGNT and Faithlife source checkouts, with MorphGNT morphology, official plaintext/orthographic tokens, original XML word/prefix/suffix/paragraph markup, and sparse apparatus notes. It supports one cross-edition native `api.S.search()` template or one advanced-app `A.search()` template over a shared canonical verse hierarchy, plus `A.pretty()` rendering. All original XML structures are native TF nodes/features; no XML/JSON blobs are encoded into features. **No upstream Greek dataset is bundled.**
+
+To inspect a single verse as source-qualified JSON from the same native
+graph, run (after building the unified corpus):
+
+```bash
+python -m scripts.inspect_verse --edition unified \
+  --tf-dir /tmp/sblgnt-unified --book Mark --chapter 1 --verse 1
+```
+
+The records remain source-specific; see [CLI details](docs/LOCAL_VERSE_LOOKUP.md).
+No Greek output is uploaded by the automated tests.
 
 After building the local unified corpus (see the guide above), search all four
 source layers through the fifth advanced-app profile:
