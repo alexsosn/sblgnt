@@ -135,5 +135,22 @@ class NativeUnifiedAppTests(unittest.TestCase):
             fake_app.use.assert_not_called()
 
 
+    def test_root_readme_documents_one_local_four_source_advanced_app(self):
+        """README must expose the real, offline, source-qualified user path."""
+        readme = (Path(__file__).resolve().parents[1] / "README.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("four standalone", readme)
+        self.assertIn("fifth", readme)
+        self.assertIn("load_local_unified_app", readme)
+        self.assertIn('A.search("""', readme)
+        self.assertIn("A.pretty(", readme)
+        self.assertIn("morph_word morph_lemma=ἀρχή", readme)
+        self.assertIn("plain_token", readme)
+        self.assertIn("xml_word", readme)
+        self.assertIn("apparatus_note", readme)
+        self.assertIn("no word-level alignment", readme.lower())
+        self.assertNotIn("see [four offline edition-specific app profiles]", readme)
+
 if __name__ == "__main__":
     unittest.main()
