@@ -111,6 +111,44 @@ lines to a fabricated Bible verse. The independent full-source audit
 now checks that **those four are the only units outside canonical book
 nodes**; empty XML paragraph markers belong to the source book only.
 
+## Controlled native verse-inspection comparison (issue #34)
+
+The code-only software ZIP includes a local benchmark for callers who have already
+generated all five native Text-Fabric datasets:
+
+```bash
+python -m scripts.benchmark_local_tf \
+  --morphgnt /tmp/sblgnt-generated \
+  --faithlife-text /tmp/faithlife-text-tf \
+  --faithlife-xml /tmp/faithlife-xml-word-tf \
+  --faithlife-apparatus /tmp/faithlife-apparatus-tf \
+  --unified /tmp/sblgnt-unified \
+  --repeats 3 --warm-iterations 5 \
+  --report /tmp/local-tf-comparison.json
+```
+
+Each fresh Python process loads either four standalone native APIs together
+or one unified native API. The two modes inspect the same three references:
+annotated Mark 1:1, Faithlife-only John 7:53, and unannotated Mark 1:3.
+Results are compared by **source-qualified record counts**, not by inferred
+word alignment. This benchmarks **native verse inspection**, not `A.search()`
+(whose four-layer match tuples are a different workload).
+
+Three fresh processes per mode, in alternating order, report original
+top-level `*.tf` bytes (excluding TF caches), TF feature-load latency, the
+first 3-verse lookup after load, the median of five subsequent warm lookups,
+peak Python `tracemalloc` during **feature loading**, and whole-process peak
+RSS (including native allocations). The report retains raw samples and
+medians, Python/TF versions, machine architecture and CPU count. It contains
+only numeric metrics and nontextual metadata, never Greek or apparatus
+content; subprocess stdout/stderr and failures are sanitized.
+
+A process-cold load does **not** clear the OS filesystem cache. Differences
+between modes on one CI runner are exploratory observations, not portable
+speedup claims. The existing ~941 MiB traced peak concerns **unified corpus
+conversion**, whereas these new memory measurements concern **loading and
+lookup**; standalone conversion peak RSS is deferred under #34.
+
 ## Local advanced-app interface: one `A.search()`
 
 After generating the unified native TF directory, use the **fifth**

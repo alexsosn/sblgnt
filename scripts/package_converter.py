@@ -18,6 +18,7 @@ REQUIRED_SCRIPTS = (
     "audit_faithlife_xml_tf.py",
     "audit_tf.py",
     "audit_unified_tf.py",
+    "benchmark_local_tf.py",
     "build_base_tf.py",
     "build_faithlife_apparatus_tf.py",
     "build_faithlife_text_tf.py",
