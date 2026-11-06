@@ -106,7 +106,6 @@ def _lookup(apis, mode):
 
 
 def _load(mode, paths):
-    from tf.fabric import Fabric
     if mode == "unified":
         validate_unified_source_pins(paths["unified"])
         specs = [("unified", UNIFIED_VERSE_FEATURES, "unit")]
@@ -117,6 +116,7 @@ def _load(mode, paths):
                  for ed in EDITION_ORDER]
     else:
         raise ValueError("invalid mode")
+    from tf.fabric import Fabric
     loaded = {}
     for name, features, slot in specs:
         api = Fabric(locations=[str(Path(paths[name]).resolve())],
