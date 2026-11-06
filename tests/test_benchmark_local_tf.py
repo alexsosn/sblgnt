@@ -144,13 +144,17 @@ class LocalTFBenchmarkTests(unittest.TestCase):
                 },
             },
             "john": {
-                "status": "present", "layers": {
+                "status": "present",
+                "join_semantics": "verse-cooccurrence-only",
+                "layers": {
                     "morphgnt": {"status": "absent"},
                     "faithlife-text": {"status": "present"},
                     "faithlife-xml": {"status": "present"},
                 },
             },
-            "mark3": {"status": "present", "layers": {
+            "mark3": {"status": "present",
+                      "join_semantics": "verse-cooccurrence-only",
+                      "layers": {
                 "faithlife-apparatus": {"status": "unannotated", "notes": []},
             }},
         })
