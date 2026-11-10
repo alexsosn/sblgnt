@@ -12,27 +12,43 @@ python -m scripts.build_unified_tf \
   --output /tmp/sblgnt-unified
 ```
 
-To query it:
+To run a four-source **native TF Search with a smaller memory
+footprint** than the full advanced app, load only the section features and
+the explicitly constrained MorphGNT lemma. Text-Fabric still knows all
+four source node types from its shared native `otype/oslots` warp:
 
 ```python
+from pathlib import Path
 from tf.fabric import Fabric
-TF = Fabric(locations=["/tmp/sblgnt-unified"], silent="deep")
-api = TF.load(
-    "book chapter verse morph_lemma morph_text morph_morphology "
-    "faithlife_text plain_surface xml_word_text xml_prefix_text "
-    "xml_suffix_text apparatus_note_text", silent="deep"
-)
+from scripts.local_tf_app import validate_unified_source_pins
 
-results = api.S.search("""
+directory = Path("/tmp/sblgnt-unified")
+validate_unified_source_pins(directory)  # both pinned source SHAs and converter
+api = Fabric(locations=[str(directory)], silent="deep").load(
+    "book chapter verse morph_lemma", silent="deep"
+)
+if not api or api.F.otype.slotType != "unit":
+    raise RuntimeError("unified TF native warp is missing")
+
+matches = tuple(api.S.search("""
 book book=Mark
   chapter chapter=1
     verse verse=1
       morph_word morph_lemma=ἀρχή
+      plain_token
+      xml_word
       apparatus_note
-""")
-# Each result is a tuple of book, chapter, verse, morphological word,
-# and apparatus note node IDs from ONE shared TF warp.
+""", limit=64))
+# On the audited pinned 27-book sources, this yields 25 matches.
+# Each tuple records SAME-VERSE co-occurrence; no verified word alignment.
 ```
+
+This is a **search-only** interface. It does not preload original verse
+text, XML surface/prefix/suffix strings, or apparatus note text for display,
+and it does not provide `A.pretty()`. For source-faithful rendering use
+the full local advanced app below, or inspect one verse with the separately
+source-pinned CLI. The lightweight query still needs a large structural
+index; see the measured memory comparison below.
 
 The generated corpus has one `book → chapter → verse` section hierarchy
 using **7,939** official Faithlife references; the **7,927** MorphGNT
@@ -183,6 +199,24 @@ load, peak process RSS immediately after loading and after the smoke,
 and per-profile raw samples/medians. Worker stdout, errors, rendered
 HTML, Greek words and apparatus notes are **never** emitted into the
 aggregate source-free JSON artifact.
+
+On one GitHub Actions Linux x86-64 runner (4 CPUs, Python 3.12.16,
+Text-Fabric 13.1.0), each profile was loaded in **three fresh processes**
+with Python memory tracing enabled. Median peak process RSS was:
+
+| Workload | Median peak RSS | Native query/display |
+| --- | ---: | --- |
+| Structural sections + source-node inventory | **1,548 MiB** | Native sections only |
+| Minimal four-layer `api.S.search()` | **1,561 MiB** | 25 Mark 1:1 matches |
+| Full advanced `A.search()` + `A.pretty()` | **1,822 MiB** | 25 matches and rendered HTML |
+
+The structural-only load already costs about **85% of full advanced-app
+peak RSS**. The proven search-only path saved about **261 MiB** versus
+full advanced-app loading on this instrumented runner, but it does not
+supply the same display features. The remaining large footprint appears
+to be primarily connected to the shared native TF graph/indexes;
+these numbers do **not** apportion memory among individual computed
+indexes, and do not establish a portable memory requirement.
 
 Text-Fabric's loader unconditionally loads the native warp and prepares
 indexes such as canonical node order, `levUp` and `levDown` before
