@@ -148,7 +148,7 @@ class UnifiedLoaderAttributionTests(unittest.TestCase):
         self.assertIn("1,548 MiB", guide)
         self.assertIn("1,561 MiB", guide)
         self.assertIn("1,822 MiB", guide)
-        self.assertIn("no", guide.lower())  # avoid implying word alignment
+        self.assertIn("no verified word alignment", guide)
 
 
 
