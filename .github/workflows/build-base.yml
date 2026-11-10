@@ -136,6 +136,12 @@ jobs:
           --repeats 3
           --warm-iterations 5
           --report "$RUNNER_TEMP/local-tf-comparison.json"
+      - name: Attribute native unified TF loader memory across structure query and advanced app
+        run: >-
+          python -m scripts.profile_unified_load
+          --unified "$RUNNER_TEMP/unified-native-tf"
+          --repeats 3
+          --report "$RUNNER_TEMP/unified-load-profiles.json"
       - name: End-user E2E conversion from verified extracted software-only ZIP
         shell: bash
         run: |
@@ -158,6 +164,7 @@ jobs:
               --faithlife-apparatus "$RUNNER_TEMP/faithlife-apparatus-tf" \
               --unified "$RUNNER_TEMP/unified-from-extracted-zip"
             PYTHONPATH= python -m scripts.benchmark_local_tf --help > /dev/null
+            PYTHONPATH= python -m scripts.profile_unified_load --help > /dev/null
           )
           # Must compare BOTH exact file inventory and exact feature bytes.
           # Neither check prints the underlying Greek source content.
@@ -200,5 +207,6 @@ jobs:
             ${{ runner.temp }}/unified-native-tf-smoke.json
             ${{ runner.temp }}/unified-native-tf-content-audit.json
             ${{ runner.temp }}/local-tf-comparison.json
+            ${{ runner.temp }}/unified-load-profiles.json
             ${{ runner.temp }}/unified-extracted-e2e.json
           if-no-files-found: ignore
