@@ -137,6 +137,20 @@ class UnifiedLoaderAttributionTests(unittest.TestCase):
         self.assertIn("unified-load-profiles.json", workflow)
         self.assertIn("--repeats 3", workflow)
 
+    def test_user_guide_offers_source_pinned_minimal_four_source_search(self):
+        repo = Path(__file__).resolve().parents[1]
+        guide = (repo / "docs/UNIFIED_NATIVE_TF.md").read_text("utf-8")
+        self.assertIn("validate_unified_source_pins(directory)", guide)
+        self.assertIn('"book chapter verse morph_lemma"', guide)
+        self.assertIn("plain_token", guide)
+        self.assertIn("xml_word", guide)
+        self.assertIn("apparatus_note", guide)
+        self.assertIn("1,548 MiB", guide)
+        self.assertIn("1,561 MiB", guide)
+        self.assertIn("1,822 MiB", guide)
+        self.assertIn("no", guide.lower())  # avoid implying word alignment
+
+
 
 if __name__ == "__main__":
     unittest.main()
