@@ -149,6 +149,53 @@ speedup claims. The existing ~941 MiB traced peak concerns **unified corpus
 conversion**, whereas these new memory measurements concern **loading and
 lookup**; standalone conversion peak RSS is deferred under #34.
 
+## Profiling memory cost of the unified loader
+
+Issue [#47](https://github.com/alexsosn/sblgnt/issues/47) investigates the
+measured 1.76 GiB peak RSS when loading the unified native corpus for
+verse inspection. The following local, source-free **diagnostic** loads
+the same audited corpus in three fresh processes per workflow:
+
+```bash
+python -m scripts.profile_unified_load \
+  --unified /tmp/sblgnt-unified \
+  --repeats 3 \
+  --report /tmp/unified-load-profiles.json
+```
+
+The three workflows use the actual Text-Fabric 13.1.0 loader:
+
+- `structural`: load `book chapter verse`, then check the full native
+  graph inventory, canonical Mark/John sections, and absent MorphGNT
+  morphology in John 7:53.
+- `query`: additionally load `morph_lemma` and execute the real
+  four-source native `api.S.search()` Mark 1:1 query (25 matches), plus
+  the negative John 7:53 query. The other source layers are matched
+  by native node type rather than fake token alignment.
+- `advanced`: run the **unchanged** `load_local_unified_app` profile,
+  validate `A.search()` on four layers and `A.pretty()` on Mark 1:1.
+  This measures full user-facing advanced-app loading.
+
+Each workflow verifies 27 books, 7,939 verse nodes and 6,934 apparatus
+note nodes, plus pinned source metadata and the native `unit` warp.
+It reports load elapsed time, peak traced Python allocations during
+load, peak process RSS immediately after loading and after the smoke,
+and per-profile raw samples/medians. Worker stdout, errors, rendered
+HTML, Greek words and apparatus notes are **never** emitted into the
+aggregate source-free JSON artifact.
+
+Text-Fabric's loader unconditionally loads the native warp and prepares
+indexes such as canonical node order, `levUp` and `levDown` before
+loading requested scalar features (see tagged
+[Text-Fabric 13.1.0 core loader](https://github.com/annotation/text-fabric/blob/v13.1.0/tf/core/fabric.py)).
+The diagnostic distinguishes costs shared by all workflows from
+additional query features and advanced-app presentation. It does **not**
+establish the precise contribution of each TF index or directly profile
+converter build memory. Fresh processes do **not** clear OS filesystem
+cache. The workflows do different work, so do not compare their elapsed
+times as equivalent query throughput or assume that a smaller feature
+list preserves all advanced-app display functionality.
+
 ## Local advanced-app interface: one `A.search()`
 
 After generating the unified native TF directory, use the **fifth**
