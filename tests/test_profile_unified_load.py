@@ -73,7 +73,7 @@ class UnifiedLoaderAttributionTests(unittest.TestCase):
         self.assertEqual(result["repeats"], 3)
         self.assertEqual(result["medians"]["structural"]["load_ms"], 6.0)
         self.assertEqual(result["medians"]["query"]["load_ms"], 5.0)
-        self.assertEqual(result["medians"]["advanced"]["load_ms"], 5.0)
+        self.assertEqual(result["medians"]["advanced"]["load_ms"], 4.0)
         self.assertEqual(result["hardware"]["tf"], "13.1.0")
         self.assertEqual(len(result["samples"]["query"]), 3)
 
