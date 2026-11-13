@@ -29,6 +29,7 @@ def fixture(root: Path) -> Path:
     (root / "release" / "source_rights.json").write_text('{"schema": 1}\n', encoding="utf-8")
     (root / "README.md").write_text("# converter\n", encoding="utf-8")
     (root / "LICENSE").write_text("software license\n", encoding="utf-8")
+    (root / "CITATION.cff").write_text("cff-version: 1.2.0\n", encoding="utf-8")
     (root / "tf" / "2022").mkdir(parents=True)
     (root / "tf" / "2022" / "text.tf").write_text("DO_NOT_PACKAGE_GREEK\n", encoding="utf-8")
     (root / "programs").mkdir()
@@ -43,6 +44,8 @@ class ConverterArtifactTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         files = selected_files(root)
         self.assertIn("scripts/build_base_tf.py", files)
+        self.assertIn("CITATION.cff", files)
+        self.assertIn(b"cff-version: 1.2.0", files["CITATION.cff"])
         self.assertIn("scripts/build_faithlife_apparatus_tf.py", files)
         self.assertIn("app/profiles/morphgnt/config.yaml", files)
         self.assertNotIn("tf/2022/text.tf", files)
@@ -91,6 +94,7 @@ class ConverterArtifactTests(unittest.TestCase):
             self.assertEqual(report["kind"], "converter-software-only")
             with ZipFile(a) as archive:
                 members = set(archive.namelist())
+                self.assertIn(f"{PACKAGE_ROOT}/CITATION.cff", members)
                 self.assertEqual(members,
                                  {f"{PACKAGE_ROOT}/{path}" for path in selected_files(root)}
                                  | {f"{PACKAGE_ROOT}/SOFTWARE_MANIFEST.json"})
