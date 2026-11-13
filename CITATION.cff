@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this maintained converter, cite this repository. If you use the historical CenterBLC SBLGNT corpus, also cite its original release listed below."
+title: "SBLGNT: Text-Fabric Greek New Testament converter (maintenance fork)"
+type: software
+authors:
+  - given-names: Oliver
+    family-names: Glanz
+  - given-names: Oleksandr
+    family-names: Sosnovshchenko
+repository-code: "https://github.com/alexsosn/sblgnt"
+url: "https://github.com/alexsosn/sblgnt"
+abstract: "Maintained converters and validation software for edition-qualified SBL Greek New Testament Text-Fabric corpora. The code-only release excludes upstream Greek corpus data."
+references:
+  - type: software
+    authors:
+      - given-names: Oliver
+        family-names: Glanz
+    title: "CenterBLC/SBLGNT: SBLGNT v1.0.0"
+    doi: "10.5281/zenodo.5807152"
+    year: 2021
+    url: "https://doi.org/10.5281/zenodo.5807152"
