@@ -50,7 +50,7 @@ REQUIRED_DOCS = (
     "CONVERTER_RELEASE.md", "UNIFIED_NATIVE_TF.md",
 )
 PROFILES = ("morphgnt", "faithlife-text", "faithlife-xml", "faithlife-apparatus", "unified")
-STATIC_FILES = ("README.md", "LICENSE", "release/source_rights.json")
+STATIC_FILES = ("README.md", "LICENSE", "CITATION.cff", "release/source_rights.json")
 MANIFEST = "SOFTWARE_MANIFEST.json"
 
 

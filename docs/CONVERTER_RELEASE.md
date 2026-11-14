@@ -2,7 +2,7 @@
 
 **Deliverable:** an allowlisted, reproducible source-code ZIP of the Python
 converters, independent verification tools, local edition-specific TF app
-profiles, documentation, the repository's software LICENSE and the
+profiles, documentation, the repository's software LICENSE and CITATION.cff, and the
 source-only metadata registry. It does **not** contain MorphGNT/Faithlife
 source checkouts, historical TF datasets, generated `.tf` features,
 apparatus records, BibleOL dictionary exports, Excel notebooks or caches.
