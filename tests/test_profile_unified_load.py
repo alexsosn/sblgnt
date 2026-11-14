@@ -9,6 +9,7 @@ from unittest.mock import patch
 from scripts.profile_unified_load import (
     PROFILES, PROFILE_FEATURES, FOUR_SOURCE_QUERY,
     profile_unified, profile_worker, validate_sample,
+    INDEX_REQUIRED, trace_native_index_loads,
 )
 
 
@@ -21,6 +22,12 @@ def sample(profile, **overrides):
         john_morph_absent=True,
         search_hits=25 if profile != "structural" else None,
         pretty_rendered=profile == "advanced",
+        index_stages=[
+            {"feature": name, "rss_highwater_mib": 400 + i,
+             "traced_current_mib": 90 + i,
+             "traced_peak_mib": 100 + i}
+            for i, name in enumerate(INDEX_REQUIRED)
+        ] if profile == "structural" else None,
     )
     data.update(overrides)
     return data
@@ -122,6 +129,60 @@ class UnifiedLoaderAttributionTests(unittest.TestCase):
                    side_effect=fake_run):
             with self.assertRaises(ValueError):
                 profile_unified(Path("/tmp/unified"), repeats=1)
+
+
+    def test_index_load_spy_records_only_allowlisted_names_and_restores_method(self):
+        class FakeData:
+            def __init__(self, filename, okay=True):
+                self.fileName = filename
+                self.okay = okay
+
+            def load(self, *args, **kwargs):
+                return self.okay
+
+        original = FakeData.load
+        rows = []
+        with trace_native_index_loads(FakeData, rows):
+            FakeData("/fake/otype.tf").load()
+            FakeData("/fake/otype.tf").load()  # no repeated stage
+            FakeData("/fake/ignored_morph_text.tf").load()
+            FakeData("/fake/__levels__.x").load()
+            FakeData("/fake/__order__.x").load()
+            FakeData("/fake/__levUp__.x", okay=False).load()  # no failed stage
+        self.assertIs(FakeData.load, original)
+        self.assertEqual([s["feature"] for s in rows],
+                         ["otype.tf", "__levels__.x", "__order__.x"])
+        for item in rows:
+            self.assertEqual(set(item), {
+                "feature", "rss_highwater_mib", "traced_current_mib",
+                "traced_peak_mib",
+            })
+            self.assertGreater(item["rss_highwater_mib"], 0)
+
+        with self.assertRaisesRegex(RuntimeError, "synthetic"):
+            with trace_native_index_loads(FakeData, []):
+                raise RuntimeError("synthetic")
+        self.assertIs(FakeData.load, original)
+
+    def test_structural_worker_requires_checked_stages_without_source_payloads(self):
+        good = sample("structural")
+        self.assertEqual(
+            [x["feature"] for x in validate_sample(good, "structural")["index_stages"]],
+            list(INDEX_REQUIRED),
+        )
+        bad = [
+            sample("structural", index_stages=[]),
+            sample("structural", index_stages=[{**good["index_stages"][0],
+                "feature": "faithlife_source_note.xml"}] + good["index_stages"][1:]),
+            sample("structural", index_stages=good["index_stages"] * 2),
+            sample("structural", index_stages=[{**good["index_stages"][0],
+                "rss_highwater_mib": float("nan")}] + good["index_stages"][1:]),
+            sample("query", index_stages=good["index_stages"]),
+        ]
+        for value in bad:
+            with self.subTest(value=value["profile"], data=value["index_stages"]):
+                with self.assertRaises(ValueError):
+                    validate_sample(value, value["profile"])
 
     def test_worker_refuses_bad_pins_before_loading_text_fabric(self):
         with TemporaryDirectory() as directory:
