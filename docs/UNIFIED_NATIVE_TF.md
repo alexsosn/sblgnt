@@ -222,13 +222,30 @@ Text-Fabric's loader unconditionally loads the native warp and prepares
 indexes such as canonical node order, `levUp` and `levDown` before
 loading requested scalar features (see tagged
 [Text-Fabric 13.1.0 core loader](https://github.com/annotation/text-fabric/blob/v13.1.0/tf/core/fabric.py)).
-The diagnostic distinguishes costs shared by all workflows from
-additional query features and advanced-app presentation. It does **not**
-establish the precise contribution of each TF index or directly profile
-converter build memory. Fresh processes do **not** clear OS filesystem
-cache. The workflows do different work, so do not compare their elapsed
-times as equivalent query throughput or assume that a smaller feature
-list preserves all advanced-app display functionality.
+The structural profile also traces Text-Fabric's own `Data.load()`
+calls for the fixed native warp and computed-index feature names
+(`otype`, `oslots`, `__levels__`, `__order__`, `__rank__`,
+`__levUp__`, `__levDown__`, `__boundary__`, `__sections__`,
+and any enabled ancillary indexes). Each structural sample includes an
+`index_stages` sequence with **process RSS high-water**, **current
+traced Python allocations**, and **traced peak** immediately after each
+successfully loaded known feature. The profiler restores the original
+`Data.load()` method even when loading fails, and whitelists all
+resulting stage names and numeric fields. Query/advanced samples have
+`index_stages: null` because their normal loaders are not instrumented.
+
+These snapshots are **not additive per-index retained heap sizes**:
+Text-Fabric may load cached `.x` indexes, share underlying objects,
+load dependencies recursively, or retain intermediate allocations
+between stages. An RSS high-water mark cannot decrease and may hide
+freed memory. The instrumented order and high-water transitions help
+narrow the likely costly stages; they do not prove which native
+feature could safely be removed. The diagnostic also does **not**
+directly profile converter build memory. Fresh processes do **not**
+clear OS filesystem cache. The workflows do different work, so do not
+compare their elapsed times as equivalent query throughput or assume
+that a smaller feature list preserves all advanced-app display
+functionality.
 
 ## Local advanced-app interface: one `A.search()`
 

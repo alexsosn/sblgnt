@@ -7,7 +7,7 @@ are process-cold, not OS page-cache-cold. No word alignment is inferred.
 from __future__ import annotations
 
 import argparse
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import contextmanager, redirect_stdout, redirect_stderr
 from importlib.metadata import version
 from io import StringIO
 import json
@@ -48,10 +48,21 @@ ABSENT_MORPH_QUERY = (
     "    verse verse=53\n"
     "      morph_word"
 )
+# Only these fixed TF 13.1.0 native warp and computed-index file names
+# may leave the instrumented worker. Never include a dataset path or value.
+INDEX_REQUIRED = (
+    "otype.tf", "oslots.tf", "__levels__.x", "__order__.x",
+    "__rank__.x", "__levUp__.x", "__levDown__.x",
+)
+INDEX_OPTIONAL = ("otext.tf", "__characters__.x", "__boundary__.x",
+                  "__sections__.x", "__structure__.x")
+INDEX_ALLOWLIST = frozenset(INDEX_REQUIRED + INDEX_OPTIONAL)
+INDEX_FIELDS = frozenset(("feature", "rss_highwater_mib",
+                         "traced_current_mib", "traced_peak_mib"))
 METRICS = ("load_ms", "load_rss_mib", "end_rss_mib", "load_traced_mib")
 SCHEMA = set(METRICS) | {
     "profile", "books", "verses", "apparatus_notes",
-    "john_morph_absent", "search_hits", "pretty_rendered",
+    "john_morph_absent", "search_hits", "pretty_rendered", "index_stages",
 }
 
 
@@ -59,6 +70,43 @@ def _rss_mib() -> float:
     """Max RSS for this worker process; macOS reports bytes, Linux KiB."""
     peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return peak / (1048576 if sys.platform == "darwin" else 1024)
+
+
+
+@contextmanager
+def trace_native_index_loads(data_class, output: list):
+    """Observe TF's real Data.load calls, restoring its method on every exit.
+
+    Stages are process RSS *high-water* and traced allocations at the instant
+    each native warp/index feature finishes loading; not additive index sizes.
+    This wrapper never inspects Data.data (which may contain source text).
+    """
+    original_load = data_class.load
+    recorded = set()
+
+    def observed_load(instance, *args, **kwargs):
+        okay = original_load(instance, *args, **kwargs)
+        if (okay and not kwargs.get("metaOnly", False)
+                and not (args and args[0] is True)):
+            # TF 13.1 Data.fileName is extensionless; Data.path retains
+            # .tf versus computed .x. Avoid guessing the extension.
+            name = str(getattr(instance, "path", "")).rsplit("/", 1)[-1]
+            if name in INDEX_ALLOWLIST and name not in recorded:
+                current, peak = tracemalloc.get_traced_memory()
+                output.append({
+                    "feature": name,
+                    "rss_highwater_mib": round(_rss_mib(), 3),
+                    "traced_current_mib": round(current / 1048576, 3),
+                    "traced_peak_mib": round(peak / 1048576, 3),
+                })
+                recorded.add(name)
+        return okay
+
+    data_class.load = observed_load
+    try:
+        yield
+    finally:
+        data_class.load = original_load
 
 
 def _collect(query_api, query: str, is_advanced: bool):
@@ -75,6 +123,7 @@ def profile_worker(unified_dir: Path, profile: str) -> dict:
     # Avoid interpreting another edition as a unified output, before TF IO.
     validate_unified_source_pins(unified_dir)
 
+    index_stages = [] if profile == "structural" else None
     with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
         tracemalloc.start()
         try:
@@ -84,10 +133,18 @@ def profile_worker(unified_dir: Path, profile: str) -> dict:
                 api = app.api
             else:
                 from tf.fabric import Fabric
-                api = Fabric(
-                    locations=[str(Path(unified_dir).resolve())],
-                    silent="deep",
-                ).load(PROFILE_FEATURES[profile], silent="deep")
+                if profile == "structural":
+                    from tf.core.data import Data
+                    with trace_native_index_loads(Data, index_stages):
+                        api = Fabric(
+                            locations=[str(Path(unified_dir).resolve())],
+                            silent="deep",
+                        ).load(PROFILE_FEATURES[profile], silent="deep")
+                else:
+                    api = Fabric(
+                        locations=[str(Path(unified_dir).resolve())],
+                        silent="deep",
+                    ).load(PROFILE_FEATURES[profile], silent="deep")
                 if not api:
                     raise RuntimeError("pinned native TF profile failed to load")
             load_ms = (time.perf_counter_ns() - begun) / 1e6
@@ -143,6 +200,7 @@ def profile_worker(unified_dir: Path, profile: str) -> dict:
         "john_morph_absent": True,
         "search_hits": search_hits,
         "pretty_rendered": pretty_rendered,
+        "index_stages": index_stages,
     }
 
 
@@ -166,6 +224,42 @@ def validate_sample(data: dict, profile: str) -> dict:
             or type(data["pretty_rendered"]) is not bool
             or data["pretty_rendered"] != (profile == "advanced")):
         raise ValueError("source-verified unified graph or query mismatch")
+
+    stages = data["index_stages"]
+    if profile != "structural":
+        if stages is not None:
+            raise ValueError("non-structural TF index stages are not permitted")
+    else:
+        if not isinstance(stages, list) or not stages:
+            raise ValueError("missing native TF computed-index stages")
+        names = []
+        rss_values = []
+        peak_values = []
+        for stage in stages:
+            if not isinstance(stage, dict) or set(stage) != INDEX_FIELDS:
+                raise ValueError("invalid native TF index stage fields")
+            name = stage["feature"]
+            if type(name) is not str or name not in INDEX_ALLOWLIST or name in names:
+                raise ValueError("unknown or duplicate native TF index stage")
+            for metric in INDEX_FIELDS - {"feature"}:
+                value = stage[metric]
+                if (type(value) not in (int, float)
+                        or not math.isfinite(value) or value < 0):
+                    raise ValueError("nonfinite native TF index memory metric")
+            if (stage["rss_highwater_mib"] <= 0
+                    or stage["traced_current_mib"] > stage["traced_peak_mib"]
+                    or stage["rss_highwater_mib"] > data["load_rss_mib"] + 0.002
+                    or stage["traced_peak_mib"] > data["load_traced_mib"] + 0.002):
+                raise ValueError("invalid native TF index high-water memory")
+            names.append(name)
+            rss_values.append(stage["rss_highwater_mib"])
+            peak_values.append(stage["traced_peak_mib"])
+        if (not set(INDEX_REQUIRED).issubset(names)
+                or [names.index(name) for name in INDEX_REQUIRED] != sorted(
+                    names.index(name) for name in INDEX_REQUIRED)
+                or rss_values != sorted(rss_values)
+                or peak_values != sorted(peak_values)):
+            raise ValueError("missing, unordered or nonmonotonic native TF index stages")
     return data
 
 
@@ -180,6 +274,7 @@ def runtime_info():
         "traced": "Python allocation peak during load only, MiB",
         "cold": "fresh process; OS page cache NOT flushed",
         "profiles": "structural / single four-layer search / advanced A.search and A.pretty",
+        "index_stage_method": "TF 13.1 Data.load stage high-water and traced snapshots; not additive retained index sizes",
     }
 
 
