@@ -88,7 +88,9 @@ def trace_native_index_loads(data_class, output: list):
         okay = original_load(instance, *args, **kwargs)
         if (okay and not kwargs.get("metaOnly", False)
                 and not (args and args[0] is True)):
-            name = str(getattr(instance, "fileName", "")).rsplit("/", 1)[-1]
+            # TF 13.1 Data.fileName is extensionless; Data.path retains
+            # .tf versus computed .x. Avoid guessing the extension.
+            name = str(getattr(instance, "path", "")).rsplit("/", 1)[-1]
             if name in INDEX_ALLOWLIST and name not in recorded:
                 current, peak = tracemalloc.get_traced_memory()
                 output.append({
