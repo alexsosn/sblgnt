@@ -134,7 +134,10 @@ class UnifiedLoaderAttributionTests(unittest.TestCase):
     def test_index_load_spy_records_only_allowlisted_names_and_restores_method(self):
         class FakeData:
             def __init__(self, filename, okay=True):
-                self.fileName = filename
+                # TF 13.1 Data stores full extension on path, but only
+                # the extension-free stem in fileName.
+                self.path = filename
+                self.fileName = Path(filename).stem
                 self.okay = okay
 
             def load(self, *args, **kwargs):
