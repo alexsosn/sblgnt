@@ -50,6 +50,21 @@ For a notebook, use the `A.search()` / `A.pretty()` example in the
 [unified section](#unified-four-edition-text-fabric-local-conversion)
 and the [complete unified guide](docs/UNIFIED_NATIVE_TF.md).
 
+**Memory planning for a local notebook:** on one Linux GitHub Actions
+runner (4 CPUs, Python 3.12.16, Text-Fabric 13.1.0, Python memory tracing),
+the median process peak RSS across **three fresh processes** was
+**1,548 MiB** for structural/section loading, **1,561 MiB** for the lean
+four-layer `api.S.search` query, and **1,822 MiB** for full advanced
+`A.search` plus `A.pretty`. These different workloads and their
+instrumentation make this **not a portable RAM minimum** or a throughput
+comparison. On memory-constrained machines, follow the [lean native
+search example](docs/UNIFIED_NATIVE_TF.md#profiling-memory-cost-of-the-unified-loader)
+if source-qualified four-layer verse co-occurrence suffices without
+rich text/note display. Alternatively, use the
+[four standalone local apps](docs/LOCAL_TF_APPS.md) when a single
+cross-source query is unnecessary. Neither workaround makes the
+full unified `A.pretty` display low-memory.
+
 The common verse hierarchy supports four-source **same-verse** queries with
 **no word-level alignment** between the source editions. Faithlife includes
 John 7:53–8:11, whereas pinned MorphGNT has no morphology for those twelve
