@@ -10,6 +10,58 @@ The release artifact is a reproducible source-code ZIP containing converters, au
 
 This repository still tracks the historical `tf/2022` corpus: GitHub's automatically generated source ZIP/TAR **is not code-only**; see [#33](https://github.com/alexsosn/sblgnt/issues/33). Only the verified ZIP from the package-converter workflow qualifies as a software-only artifact.
 
+## Reproducible local quickstart
+
+For a first local, four-source native Text-Fabric build, use **Python 3.12**,
+`git` and two clean, immutable upstream source checkouts. The example output
+directory does not already exist: the converter refuses to overwrite an
+existing corpus. It generates local data from upstream sources you obtain
+yourself. The generated TF corpus is **not distributed** by this project.
+
+```bash
+git clone https://github.com/alexsosn/sblgnt.git sblgnt
+cd sblgnt
+python -m pip install text-fabric==13.1.0
+
+git clone https://github.com/morphgnt/sblgnt.git upstream-morphgnt
+git -C upstream-morphgnt checkout aaed91e57c8e4a8dc9a2383e129ca5e75fe6393d
+git clone https://github.com/Faithlife/SBLGNT.git upstream-faithlife
+git -C upstream-faithlife checkout c4d241a9c1c479a55b989ba35a4976c1d0b8052c
+
+python -m scripts.build_unified_tf \
+  --morphgnt-dir upstream-morphgnt \
+  --faithlife-dir upstream-faithlife \
+  --output /tmp/sblgnt-unified
+
+python -m scripts.audit_unified_tf \
+  --morphgnt-dir upstream-morphgnt \
+  --faithlife-dir upstream-faithlife \
+  --tf-dir /tmp/sblgnt-unified
+
+python -m scripts.inspect_verse --edition unified \
+  --tf-dir /tmp/sblgnt-unified --book Mark --chapter 1 --verse 1
+```
+
+The audit compares generated native nodes and features against the original
+pinned source content, not merely total counts. The final command prints the
+source-qualified verse records **locally**, including Greek source text and
+apparatus notes. Do not publish this CLI output as a software-only artifact.
+For a notebook, use the `A.search()` / `A.pretty()` example in the
+[unified section](#unified-four-edition-text-fabric-local-conversion)
+and the [complete unified guide](docs/UNIFIED_NATIVE_TF.md).
+
+The common verse hierarchy supports four-source **same-verse** queries with
+**no word-level alignment** between the source editions. Faithlife includes
+John 7:53–8:11, whereas pinned MorphGNT has no morphology for those twelve
+verses. An unannotated apparatus verse is not a missing text verse.
+
+The `git clone` above obtains this repository's historical `tf/2022` as
+well as converter code. Consequently **GitHub-generated source archives are
+not code-only**. For distribution of verified software without Greek corpus
+files, use the separately validated ZIP described in
+[the release guide](docs/CONVERTER_RELEASE.md); corpus redistribution remains
+subject to [independent source-rights review](docs/RELEASE_RIGHTS.md).
+
 ## Historical bundled dataset (legacy, excluded from converter ZIP)
 
 > **Maintenance fork** of [CenterBLC/SBLGNT](https://github.com/CenterBLC/SBLGNT). The historical `tf/2022` dataset is currently unchanged and has not yet been rebuilt or certified against newer Greek editions. See [maintenance research](docs/MAINTENANCE.md) and [backlog](BACKLOG.md). This fork keeps independent upstream/source licensing obligations.
