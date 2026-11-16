@@ -67,6 +67,24 @@ class PinnedQuickstartDocsTests(unittest.TestCase):
                 self.assertIn(argument, commands)
         self.assertNotIn("git clone --depth 1", commands)
 
+    def test_first_run_explains_measured_memory_and_query_tradeoffs(self):
+        section = quickstart_section()
+        for phrase in (
+            "1,548 MiB",
+            "1,561 MiB",
+            "1,822 MiB",
+            "three fresh processes",
+            "Text-Fabric 13.1.0",
+            "not a portable RAM minimum",
+            "docs/UNIFIED_NATIVE_TF.md",
+            "four standalone",
+            "A.pretty",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, section)
+        self.assertIn("api.S.search", section)
+        self.assertIn("A.search", section)
+
     def test_local_only_provenance_and_coverage_limits_are_explicit(self):
         section = quickstart_section()
         for phrase in (
