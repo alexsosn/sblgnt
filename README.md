@@ -58,7 +58,7 @@ four-layer `api.S.search` query, and **1,822 MiB** for full advanced
 `A.search` plus `A.pretty`. These different workloads and their
 instrumentation make this **not a portable RAM minimum** or a throughput
 comparison. On memory-constrained machines, follow the [lean native
-search example](docs/UNIFIED_NATIVE_TF.md#profiling-memory-cost-of-the-unified-loader)
+search example](docs/UNIFIED_NATIVE_TF.md)
 if source-qualified four-layer verse co-occurrence suffices without
 rich text/note display. Alternatively, use the
 [four standalone local apps](docs/LOCAL_TF_APPS.md) when a single
