@@ -24,15 +24,15 @@ The archive has deterministic ordering, fixed timestamps and file permissions.
 The release CI builds it twice, compares the ZIP bytes, verifies its contents
 against the checked-out code, then uploads only the software ZIP.
 
-**Use the ZIP artifact from the `converter-package` CI job** for
-the independently reviewed, reproducible software distribution. Starting
-with commits that include the root `.gitattributes`, GitHub-generated
-"Source code (zip/tar.gz)" snapshots omit `tf/**` and `programs/**`
-through Git's `export-ignore`, as checked by `git archive HEAD` tests.
-Those generic snapshots include additional development files and do not
-carry the same allowlisted manifest or byte-verification guarantee.
-Older commits/tags and a normal `git clone` still include the historical
-Greek TF data and original conversion notebook. See #33 for their migration.
+**Use the ZIP artifact from the `converter-package` CI job**, not
+GitHub's automatically generated "Source code (zip/tar.gz)" snapshots.
+The latter **still contain the 31 tracked `tf/2022` feature files**,
+which Text-Fabric 13.1.0 may download automatically for the existing
+`tf.app.use(..., version="2022")` app. New snapshots omit only the old
+`programs/` conversion notebook through `.gitattributes export-ignore`.
+A normal `git clone`, and source snapshots from older commits, retain
+both. The generated GitHub snapshots have no reviewed converter manifest
+or equivalent byte-verification guarantee. See #33 for the full migration.
 
 ## Run the converter
 
@@ -78,11 +78,11 @@ those operations implies morphological or textual identity across editions.
 - **Generated/input corpus files:** not part of this release. A future
   request to bundle them is a separate data-publication decision, covered
   by `release/source_rights.json` and issue #16.
-- **Existing Git-tracked legacy TF:** remains separately accessible for
-  historical audits and the legacy app. `git clone` and old archives
-  continue to include it. Current `git archive` snapshots omit legacy
-  `tf/**` and `programs/**` through `.gitattributes`, but are **not**
-  substitutes for the verified converter ZIP. See #33 for repository migration.
+- **Existing Git-tracked legacy TF:** remains accessible for historical
+  audits and the original remote 2022 app. Current `git archive` still
+  contains `tf/2022` for compatibility, but omits the original `programs/`
+  notebook. A source snapshot is **not** a substitute for the reviewed
+  code-only ZIP. See #33 for the pending rights and compatibility migration.
 
 The ZIP manifest proves byte-for-byte containment against the selected
 software files. It does not by itself establish the license of any
