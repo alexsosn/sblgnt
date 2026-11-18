@@ -78,16 +78,38 @@ third-party permissions.
 The source tag snapshot is verified against the ZIP's exact approved file
 bytes, but its container-level ZIP bytes need not match the deterministic
 `sblgnt-converter.zip` release asset: Git and the software packager use
-different archive metadata. For an eventual public release, publish the
-**verified original software ZIP as the attached asset**. Only after
-post-merge CI, separate review of release title and software license, and
-maintainer approval may an operator push the local orphan tag and create a
-GitHub Release for that *exact* tag with `gh release create --verify-tag`.
-Do not push tags in PR or ordinary push CI. The tag's own automatically
-generated GitHub archives are then source-free, while `main` and historical
-tags remain intentionally corpus-bearing for compatibility.
+different archive metadata. For an eventual published software asset, attach
+the **original verified ZIP**, never the corpus-bearing `main` snapshot.
 
-The mandatory package workflow runs this staging dry-run on the real
+## Publication compatibility gate
+
+**Blocker: issue #60.** Text-Fabric 13.1.0 can use
+`tf.app.use("alexsosn/sblgnt", version="2022")` with its GitHub release
+discovery. It tries `/releases/latest` for `complete.zip` and can fall
+back to the **latest release's commit** for data. A published **stable software
+release** of the converter in this same repository would point at the
+parentless software-only tree with no `tf/2022`; the historical remote
+corpus download may fail even though `main` still tracks the 31 TF files.
+
+**Do not publish a normal stable GitHub Release here** until a compatible
+corpus download path has been validated, or software release assets move to
+a separate repository/release channel. GitHub excludes drafts and
+**prereleases** from `/releases/latest`, so a maintainer-approved release
+candidate could use `gh release create --verify-tag --prerelease` *only*
+after a fresh-cache real Text-Fabric 13.1.0 user smoke proves the legacy
+2022 app still works. Publishing an orphan **Git tag alone** does not create
+a latest GitHub Release, but cannot attach a release asset. Never turn a
+prerelease into a stable release before clearing issue #60.
+
+After all gates, an authorized maintainer may push the **verified local tag
+ref only**, not `main` or the candidate worktree branch. For a reviewed
+prerelease, the required GitHub CLI action must explicitly include
+`--prerelease`; `--verify-tag` checks tag existence, not a cryptographic
+signature. The full sequence also requires independent inspection of the
+tag ref, verified ZIP SHA-256 and release notes. None of these publication
+operations is performed by automated CI.
+
+The mandatory package workflow performs this staging dry-run on the real
 verified converter ZIP, inspects an independently generated Git source
 archive, and runs CLI help from the unpacked tag snapshot. It does **not**
 push a tag or publish a release. A real researcher must still obtain the
