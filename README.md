@@ -77,6 +77,18 @@ files, use the separately validated ZIP described in
 [the release guide](docs/CONVERTER_RELEASE.md); corpus redistribution remains
 subject to [independent source-rights review](docs/RELEASE_RIGHTS.md).
 
+## Run your own cross-edition search from the terminal
+
+After the unified quickstart build, save a native TF Search query in a UTF-8
+file (including a `verse` node), then run
+`python -m scripts.query_unified_tf --tf-dir /tmp/sblgnt-unified --query-file query.tfq --limit 100`.
+The result gives source-qualified **same-verse** match counts and canonical
+references, with bounded/truncation-aware JSON and no reproduced Greek text.
+For a complete executable query and options for other native scalar features,
+see [the CLI research example](docs/UNIFIED_NATIVE_TF.md#search-from-the-terminal).
+It loads the same large native TF structural graph as the lean Python
+search example and does not claim low-RAM performance.
+
 ## Historical bundled dataset (legacy, excluded from converter ZIP)
 
 > **Maintenance fork** of [CenterBLC/SBLGNT](https://github.com/CenterBLC/SBLGNT). The historical `tf/2022` dataset is currently unchanged and has not yet been rebuilt or certified against newer Greek editions. See [maintenance research](docs/MAINTENANCE.md) and [backlog](BACKLOG.md). This fork keeps independent upstream/source licensing obligations.

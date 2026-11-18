@@ -12,6 +12,56 @@ python -m scripts.build_unified_tf \
   --output /tmp/sblgnt-unified
 ```
 
+## Search from the terminal
+
+After the [local build](#locally-generated-unified-sblgnt-native-text-fabric),
+researchers can run arbitrary native TF Search templates without writing
+Python. Save a UTF-8 file `query.tfq` containing the **same-verse**
+four-source query:
+
+```text
+book book=Mark
+  chapter chapter=1
+    verse verse=1
+      morph_word morph_lemma=ἀρχή
+      plain_token
+      xml_word
+      apparatus_note
+```
+
+```bash
+python -m scripts.query_unified_tf \
+  --tf-dir /tmp/sblgnt-unified \
+  --query-file query.tfq --limit 64
+```
+
+On the audited pinned sources this returns **25 TF match tuples within
+one verse** (Mark 1:1). The JSON contains `matches_returned: 25`,
+`verses_returned: 1`, and a `verses` record with
+`book: "Mark"`, `chapter: 1`, `verse: 1`, `matches: 25`.
+No Greek text, morphological fields or apparatus contents are included.
+An impossible John 7:53 `morph_word` match returns zero results.
+
+The `--limit` bounds **match tuples**, not distinct verses (default 100,
+maximum 1000). `truncated: true` means at least one more match exists;
+the per-verse counts then cover **only returned matches**. Each matching
+tuple must include exactly one explicit canonical `verse` node.
+A query without one fails when it yields a match. Queries yielding zero
+results cannot be verified to have a bound verse node, so include it in
+the template. This is a **same-verse co-occurrence** query, not
+word-level alignment.
+
+The CLI loads `book chapter verse morph_lemma` by default. For
+templates constraining other scalar TF features, pass their exact names
+with `--features "apparatus_annotated xml_verse_label"`. Source-layer
+node types are already available from the native shared warp and do not
+need a feature flag. The CLI validates both pinned source identities
+before loading, requires the `unit` warp, and accepts only a local file.
+This lean interface avoids full advanced-app rendering but still incurs
+the large native graph/index memory cost documented below. For actual
+source words and editorial detail use `scripts.inspect_verse` or
+`A.pretty()`; the CLI does not emit them.
+
 To run a four-source **native TF Search with a smaller memory
 footprint** than the full advanced app, load only the section features and
 the explicitly constrained MorphGNT lemma. Text-Fabric still knows all

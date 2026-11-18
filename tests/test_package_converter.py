@@ -67,6 +67,7 @@ class ConverterArtifactTests(unittest.TestCase):
                 "scripts.build_faithlife_xml_tf",
                 "scripts.build_faithlife_apparatus_tf",
                 "scripts.inspect_verse",
+                "scripts.query_unified_tf",
                 "scripts.package_converter",
                 "scripts.build_unified_tf",
                 "scripts.audit_unified_tf",
