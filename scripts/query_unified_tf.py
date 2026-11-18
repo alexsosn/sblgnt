@@ -22,7 +22,16 @@ from scripts.local_tf_app import validate_unified_source_pins
 MAX_QUERY_BYTES = 65536
 MAX_RESULTS = 1000
 DEFAULT_FEATURES = ("book", "chapter", "verse", "morph_lemma")
-FEATURE_NAME = re.compile(r"[a-zA-Z_][a-zA-Z_0-9]*\Z")
+FEATURE_NAME = re.compile(r"[a-zA-Z_][a-zA-Z_0-9]*\\Z")
+# Exact node vocabulary emitted by build_unified_tf.py's native CV walker.
+# Explicitly prohibit arbitrary attacker-controlled otype values in an
+# otherwise source-free opt-in JSON report.
+NATIVE_TYPES = frozenset((
+    "unit", "book", "chapter", "verse", "morph_word", "plain_token",
+    "xml_word", "xml_prefix", "xml_suffix", "xml_paragraph",
+    "apparatus_anchor", "apparatus_note", "publication",
+    "publication_line", "publication_link",
+))
 
 
 def load_template(path: Path) -> str:
@@ -97,7 +106,7 @@ def summarize_matches(api, template: str, limit: int, *,
             for node in row:
                 kind = api.F.otype.v(node)
                 if (not isinstance(kind, str)
-                        or not FEATURE_NAME.fullmatch(kind)):
+                        or kind not in NATIVE_TYPES):
                     raise ValueError("invalid native TF node type")
                 evidence.append({"node": node, "otype": kind})
             node_matches.append({
