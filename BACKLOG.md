@@ -3,7 +3,7 @@
 ## Converter-only software release track — October 2026
 - [x] Four-edition unified native TF converter and source-to-TF audit merged (#35).
 - [ ] #31/#32: reviewed converter-only ZIP/manifest and clean independent CI, including new unified modules.
-- [ ] #33: migrate historical tracked `tf/2022` from complete Git checkouts after preserving legacy app/audit compatibility; `.gitattributes export-ignore` now excludes `tf/**` and `programs/**` from new GitHub source snapshots only.
+- [ ] #33: migrate historical tracked `tf/2022` only after preserving the 2022 remote TF app and historical audits; auto GitHub source snapshots still include its 31 `.tf` features. New snapshots exclude only the unverified `programs/` notebook, while the independently verified converter ZIP excludes both.
 - [ ] #36: replace standalone XML converter's serialized empty-paragraph feature with native TF nodes.
 - [ ] #16: rights gate only for optional corpus-bearing releases; converter software has no such gate.
 
