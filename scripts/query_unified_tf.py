@@ -57,10 +57,18 @@ def summarize_matches(api, template: str, limit: int) -> dict:
     other nodes may come from distinct source layers, but are not aligned.
     """
     _validated_request(template, limit)
-    # TF 13.1 Search is lazy; an invalid search may return None.
-    results = api.S.search(template, limit=limit + 1)
-    if results is None:
-        raise ValueError("native TF Search returned no iterator")
+    # TF 13.1 can return an EMPTY result set when template parsing failed.
+    # Its private diagnostic cache exposes a boolean success status; checking
+    # only the results would silently misreport invalid research as no hits.
+    messages = []
+    response = api.S.search(template, limit=limit + 1, _msgCache=messages)
+    if (not isinstance(response, tuple) or len(response) != 3
+            or response[1] is not True):
+        raise ValueError("invalid native TF Search template or execution")
+    results = response[0]
+    if (results is None or
+            getattr(getattr(api.S, "exe", None), "good", True) is not True):
+        raise ValueError("invalid native TF Search execution status")
     iterator = iter(results)
     rows = tuple(islice(iterator, limit + 1))
     counts = Counter()
