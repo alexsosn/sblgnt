@@ -43,7 +43,7 @@ No Greek text, morphological fields or apparatus contents are included.
 An impossible John 7:53 `morph_word` match returns zero results.
 
 To inspect **which native TF nodes** participated in each individual
-match without loading Greek text or writing Python, add `--include-nodes`:
+match without printing Greek text or writing Python, add `--include-nodes`:
 
 ```bash
 python -m scripts.query_unified_tf \
