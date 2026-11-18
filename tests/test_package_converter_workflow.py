@@ -2,6 +2,7 @@
 from io import BytesIO
 from pathlib import Path
 import subprocess
+import tarfile
 import unittest
 from zipfile import ZipFile
 
@@ -60,6 +61,15 @@ class SoftwareWorkflowTests(unittest.TestCase):
                              for path in names))
         self.assertFalse(any(path.endswith((".tf", ".ipynb"))
                              for path in names))
+        # GitHub creates both source zipball and tarball via git archive.
+        tar_result = subprocess.run(
+            ["git", "archive", "--format=tar", "HEAD"],
+            cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=True, timeout=30,
+        )
+        with tarfile.open(fileobj=BytesIO(tar_result.stdout), mode="r:") as archive:
+            tar_names = {item.name for item in archive}
+        self.assertEqual(names, tar_names)
 
     def test_export_ignore_is_applied_to_actual_tracked_data(self):
         paths = (
