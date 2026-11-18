@@ -34,6 +34,65 @@ A normal `git clone`, and source snapshots from older commits, retain
 both. The generated GitHub snapshots have no reviewed converter manifest
 or equivalent byte-verification guarantee. See #33 for the full migration.
 
+## Isolated software tag candidate
+
+A public GitHub Release tag pointed at the normal `main` commit would inherit
+the historical `tf/2022` files in its automatically generated "Source code"
+ZIP/TAR. Those files must remain available on `main` for older Text-Fabric
+13.1.0 remote downloads. **Never tag the corpus-bearing `main` commit as a
+software-only release.** The staging tool is intentionally a repository
+maintainer utility under `release/`, not an entry point included in the
+independently verified end-user software ZIP.
+
+From a reviewed source checkout, first create and verify the software ZIP as
+above. Then create a **separate local, parentless Git commit and lightweight
+tag** containing precisely those approved ZIP files plus
+`SOFTWARE_MANIFEST.json` (no corpus, GitHub remote, or publication):
+
+```bash
+python -m release.stage_software_tag \
+  --source-root . \
+  --archive /tmp/sblgnt-converter.zip \
+  --destination /tmp/sblgnt-software-tag-candidate \
+  --tag converter-v0.1.0-rc1
+
+python -m release.stage_software_tag \
+  --source-root . \
+  --archive /tmp/sblgnt-converter.zip \
+  --destination /tmp/sblgnt-software-tag-candidate \
+  --tag converter-v0.1.0-rc1 --verify-only
+
+git -C /tmp/sblgnt-software-tag-candidate archive \
+  --format=zip --output=/tmp/sblgnt-source-snapshot.zip converter-v0.1.0-rc1
+```
+
+The version here is **an example release-candidate label**, not a published
+version. Staging requires `git` and an absent destination outside the source
+checkout. It fails if the verified ZIP differs from the checked-out source,
+the tag syntax is invalid, the commit has a parent, the source snapshot
+contains anything outside the ZIP manifest, or bytes differ. The Git commit
+uses a fixed author date solely for deterministic verification. It is a
+**local unsigned lightweight tag**, not a software signature or proof of
+third-party permissions.
+
+The source tag snapshot is verified against the ZIP's exact approved file
+bytes, but its container-level ZIP bytes need not match the deterministic
+`sblgnt-converter.zip` release asset: Git and the software packager use
+different archive metadata. For an eventual public release, publish the
+**verified original software ZIP as the attached asset**. Only after
+post-merge CI, separate review of release title and software license, and
+maintainer approval may an operator push the local orphan tag and create a
+GitHub Release for that *exact* tag with `gh release create --verify-tag`.
+Do not push tags in PR or ordinary push CI. The tag's own automatically
+generated GitHub archives are then source-free, while `main` and historical
+tags remain intentionally corpus-bearing for compatibility.
+
+The mandatory package workflow runs this staging dry-run on the real
+verified converter ZIP, inspects an independently generated Git source
+archive, and runs CLI help from the unpacked tag snapshot. It does **not**
+push a tag or publish a release. A real researcher must still obtain the
+pinned MorphGNT and Faithlife source checkouts to generate corpus data.
+
 ## Run the converter
 
 Extract the verified archive. Start Python in the extracted
