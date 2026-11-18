@@ -86,8 +86,7 @@ the **original verified ZIP**, never the corpus-bearing `main` snapshot.
 **Blocker: issue #60.** Text-Fabric 13.1.0 can use
 `tf.app.use("alexsosn/sblgnt", version="2022")` with its GitHub release
 discovery. It tries `/releases/latest` for `complete.zip` and can fall
-back to the **latest release's commit** for data. A published **stable software
-release** of the converter in this same repository would point at the
+back to the **latest release's commit** for data. A published **stable software release** of the converter in this same repository would point at the
 parentless software-only tree with no `tf/2022`; the historical remote
 corpus download may fail even though `main` still tracks the 31 TF files.
 
