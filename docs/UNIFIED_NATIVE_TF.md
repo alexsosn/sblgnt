@@ -30,8 +30,8 @@ book book=Mark
 ```
 
 ```bash
-python -m scripts.query_unified_tf \\
-  --tf-dir /tmp/sblgnt-unified \\
+python -m scripts.query_unified_tf \
+  --tf-dir /tmp/sblgnt-unified \
   --query-file query.tfq --limit 64
 ```
 
