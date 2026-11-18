@@ -82,8 +82,12 @@ subject to [independent source-rights review](docs/RELEASE_RIGHTS.md).
 After the unified quickstart build, save a native TF Search query in a UTF-8
 file (including a `verse` node), then run
 `python -m scripts.query_unified_tf --tf-dir /tmp/sblgnt-unified --query-file query.tfq --limit 100`.
-The result gives source-qualified **same-verse** match counts and canonical
-references, with bounded/truncation-aware JSON and no reproduced Greek text.
+The default result gives source-qualified **same-verse** match counts and
+canonical references, with bounded/truncation-aware JSON and no reproduced
+Greek text. Add `--include-nodes` to obtain each individual bounded Search
+tuple's native node IDs and types in template order, still without source
+text. Node IDs identify only the exact locally generated unified TF graph,
+and do not imply cross-edition word alignment.
 For a complete executable query and options for other native scalar features,
 see [the CLI research example](docs/UNIFIED_NATIVE_TF.md#search-from-the-terminal).
 It loads the same large native TF structural graph as the lean Python
