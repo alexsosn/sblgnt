@@ -15,6 +15,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   converter-package:
     runs-on: ubuntu-latest
@@ -34,6 +37,28 @@ jobs:
         run: |
           cmp "$RUNNER_TEMP/sblgnt-converter-first.zip" "$RUNNER_TEMP/sblgnt-converter-second.zip"
           python -m scripts.package_converter --verify "$RUNNER_TEMP/sblgnt-converter-first.zip"
+      - name: RED/green isolated Git software tag candidate unit tests
+        run: python -m unittest discover -s tests -p 'test_release_tag_staging.py' -v
+      - name: Stage and independently verify data-free Git tag from real ZIP
+        run: |
+          python -m release.stage_software_tag \
+            --source-root . \
+            --archive "$RUNNER_TEMP/sblgnt-converter-first.zip" \
+            --destination "$RUNNER_TEMP/software-tag-preview" \
+            --tag converter-v0.1.0-rc1 > "$RUNNER_TEMP/software-tag-preview.json"
+          python -m release.stage_software_tag \
+            --source-root . \
+            --archive "$RUNNER_TEMP/sblgnt-converter-first.zip" \
+            --destination "$RUNNER_TEMP/software-tag-preview" \
+            --tag converter-v0.1.0-rc1 --verify-only > /dev/null
+          git -C "$RUNNER_TEMP/software-tag-preview" archive --format=zip \
+            --output="$RUNNER_TEMP/software-tag-archive.zip" converter-v0.1.0-rc1
+          mkdir "$RUNNER_TEMP/software-tag-extracted"
+          unzip -q "$RUNNER_TEMP/software-tag-archive.zip" \
+            -d "$RUNNER_TEMP/software-tag-extracted"
+          (cd "$RUNNER_TEMP/software-tag-extracted" && \
+            PYTHONPATH= python -m scripts.query_unified_tf --help > /dev/null && \
+            PYTHONPATH= python -m scripts.build_unified_tf --help > /dev/null)
       - name: Publish only independently verified converter software
         uses: actions/upload-artifact@v4
         with:
