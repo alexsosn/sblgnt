@@ -138,6 +138,29 @@ class ReleaseTagStagingTests(unittest.TestCase):
             self.assertTrue((destination / "sentinel").exists())
             self.assertEqual(root.joinpath("README.md").read_bytes(), before)
 
+    def test_release_latest_cannot_hijack_legacy_2022_app(self):
+        # P0 #60: publishing a stable converter-only GitHub Release in the
+        # historical TF corpus repository changes its /releases/latest path.
+        guide = (Path(__file__).resolve().parents[1]
+                 / "docs/CONVERTER_RELEASE.md").read_text()
+        for required in (
+            "## Publication compatibility gate",
+            "/releases/latest",
+            "complete.zip",
+            "tf.app.use",
+            "issue #60",
+            "--prerelease",
+            "--verify-tag",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, guide)
+        self.assertIn("stable software release", guide)
+        flow = (Path(__file__).resolve().parents[1]
+                / ".github/workflows/package-converter.yml").read_text()
+        self.assertIn("contents: read", flow)
+        self.assertNotIn("gh release create", flow)
+        self.assertNotIn("git push", flow)
+
     def test_release_workflow_executes_real_package_candidate_smoke(self):
         project = Path(__file__).resolve().parents[1]
         flow = (project / ".github/workflows/package-converter.yml").read_text()
