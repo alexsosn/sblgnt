@@ -8,7 +8,14 @@ The Zenodo badge above identifies the **original CenterBLC v1.0.0 release**, not
 
 The release artifact is a reproducible source-code ZIP containing converters, audits, TF app profiles and documentation, including [the unified converter](docs/UNIFIED_NATIVE_TF.md). It contains no upstream Greek text or generated TF corpus; upstream **data redistribution** permissions are not a gate for this software artifact. Build/verify using [the code-only release guide](docs/CONVERTER_RELEASE.md).
 
-Git checkouts still contain the historical `tf/2022` corpus and the original conversion notebook. This revision's `.gitattributes` excludes `tf/**` and `programs/**` from GitHub-generated source ZIP/TAR snapshots, **not from `git clone` or old commits/tags**. These generic snapshots are not the reviewed, manifest-locked distribution. Use the [independently verified converter ZIP](docs/CONVERTER_RELEASE.md) for a software-only release asset. The wider tracked-data migration remains [#33](https://github.com/alexsosn/sblgnt/issues/33).
+Git checkouts **and GitHub-generated source ZIP/TAR snapshots** still contain
+the historical `tf/2022` corpus, needed by Text-Fabric 13.1.0's legacy
+automatic `tf.app.use(..., version="2022")` downloads. New snapshots omit
+only the original `programs/` notebook through `.gitattributes export-ignore`,
+while `git clone` and older snapshots still include it. **Do not use these
+archives as a software-only distribution.** Use the independently verified
+[converter ZIP](docs/CONVERTER_RELEASE.md); full legacy migration remains
+[#33](https://github.com/alexsosn/sblgnt/issues/33).
 
 ## Reproducible local quickstart
 
@@ -70,13 +77,14 @@ The common verse hierarchy supports four-source **same-verse** queries with
 John 7:53–8:11, whereas pinned MorphGNT has no morphology for those twelve
 verses. An unannotated apparatus verse is not a missing text verse.
 
-The `git clone` above still obtains the historical `tf/2022` corpus and
-`programs/` notebook. Archive exclusions affect only `git archive` and
-GitHub-generated source snapshots **at commits carrying `.gitattributes`**.
-Earlier snapshots and complete Git clones may include those data.
-For the reviewed, reproducible software-only distribution use the separately
-validated ZIP described in [the release guide](docs/CONVERTER_RELEASE.md).
-Any corpus redistribution remains subject to
+The `git clone` above obtains the historical `tf/2022` corpus and
+`programs/` notebook. **GitHub-generated source archives** at newer
+commits still include `tf/2022` to preserve legacy Text-Fabric automatic
+downloads, but exclude the old notebook. Neither ordinary clones nor
+GitHub source snapshots are approved software-only distributions. For the
+reviewed converter use the separately validated ZIP in
+[the release guide](docs/CONVERTER_RELEASE.md). Corpus publication and
+historical redistribution rights remain subject to
 [independent source-rights review](docs/RELEASE_RIGHTS.md).
 
 ## Run your own cross-edition search from the terminal
