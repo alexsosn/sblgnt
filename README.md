@@ -80,8 +80,9 @@ verses. An unannotated apparatus verse is not a missing text verse.
 The `git clone` above obtains the historical `tf/2022` corpus and
 `programs/` notebook. **GitHub-generated source archives** at newer
 commits still include `tf/2022` to preserve legacy Text-Fabric automatic
-downloads, but exclude the old notebook. Git clones and GitHub-generated source archives are **not code-only**
-and are not approved software-only distributions. For the
+downloads, but exclude the old notebook. Git clones and
+GitHub-generated source archives are **not code-only** and are not
+approved software-only distributions. For the
 reviewed converter use the separately validated ZIP in
 [the release guide](docs/CONVERTER_RELEASE.md). Corpus publication and
 historical redistribution rights remain subject to
