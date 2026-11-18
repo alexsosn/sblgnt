@@ -1,6 +1,10 @@
 """Independent CI gate for code-only archive, never original Greek source."""
+from io import BytesIO
 from pathlib import Path
+import subprocess
+import tarfile
 import unittest
+from zipfile import ZipFile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,6 +36,58 @@ class SoftwareWorkflowTests(unittest.TestCase):
         self.assertIn('cmp "$RUNNER_TEMP/sblgnt-converter-first.zip" "$RUNNER_TEMP/sblgnt-converter-second.zip"', content)
         self.assertIn("python -m scripts.package_converter --verify", content)
         self.assertIn("python -m unittest discover", content)
+
+    def test_github_snapshots_preserve_legacy_tf_app_but_omit_notebook(self):
+        """TF 13.1.0 remote checkout uses a GitHub repository ZIP fallback.
+
+        Until we publish/retire a verified alternative to the 2022 corpus,
+        export-ignore must NOT remove its native TF files from this ZIP.
+        """
+        legacy = ROOT / "tf/2022"
+        expected = {f"tf/2022/{file.name}" for file in legacy.glob("*.tf")}
+        self.assertEqual(len(expected), 31)
+        self.assertTrue((ROOT / "programs/SBLGNT TF feature production.ipynb").is_file())
+        result = subprocess.run(
+            ["git", "archive", "--format=zip", "HEAD"],
+            cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=True, timeout=30,
+        )
+        with ZipFile(BytesIO(result.stdout)) as archive:
+            names = set(archive.namelist())
+        for required in (
+            "README.md", "LICENSE", "CITATION.cff", "app/config.yaml",
+            "scripts/build_unified_tf.py", "scripts/query_unified_tf.py",
+            "release/source_rights.json", "docs/CONVERTER_RELEASE.md",
+        ):
+            self.assertIn(required, names)
+        self.assertTrue(expected.issubset(names))
+        self.assertFalse(any(path.startswith("programs/") for path in names))
+        self.assertFalse(any(path.endswith(".ipynb") for path in names))
+        tar_result = subprocess.run(
+            ["git", "archive", "--format=tar", "HEAD"],
+            cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            check=True, timeout=30,
+        )
+        with tarfile.open(fileobj=BytesIO(tar_result.stdout), mode="r:") as archive:
+            tar_names = {item.name for item in archive}
+        # The Git ZIP format adds a trailing slash to directory members.
+        self.assertEqual({name.rstrip("/") for name in names}, tar_names)
+
+    def test_export_ignore_excludes_only_notebook_not_tf_app(self):
+        paths = (
+            "tf/2022/otype.tf",
+            "tf/2022/gloss.tf",
+            "tf/2022/lemma_dictform.tf",
+            "programs/SBLGNT TF feature production.ipynb",
+        )
+        proc = subprocess.run(
+            ["git", "check-attr", "export-ignore", "--", *paths],
+            cwd=ROOT, capture_output=True, text=True, check=True, timeout=10,
+        )
+        self.assertEqual(proc.stdout.splitlines(), [
+            f"{path}: export-ignore: {'set' if path.startswith('programs/') else 'unspecified'}"
+            for path in paths
+        ])
 
     def test_release_artifact_upload_whitelists_single_zip(self):
         content = WORKFLOW.read_text(encoding="utf-8")

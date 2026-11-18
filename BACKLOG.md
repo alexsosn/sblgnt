@@ -3,11 +3,11 @@
 ## Converter-only software release track — October 2026
 - [x] Four-edition unified native TF converter and source-to-TF audit merged (#35).
 - [ ] #31/#32: reviewed converter-only ZIP/manifest and clean independent CI, including new unified modules.
-- [ ] #33: remove/migrate historical tracked `tf/2022` if GitHub's automatic source downloads should also become code-only.
+- [ ] #33: migrate historical tracked `tf/2022` only after preserving the 2022 remote TF app and historical audits; auto GitHub source snapshots still include its 31 `.tf` features. New snapshots exclude only the unverified `programs/` notebook, while the independently verified converter ZIP excludes both.
 - [ ] #36: replace standalone XML converter's serialized empty-paragraph feature with native TF nodes.
 - [ ] #16: rights gate only for optional corpus-bearing releases; converter software has no such gate.
 
-GitHub Issues are currently disabled in this fork (GitHub API returns HTTP 410). This file tracks planned work until Issues are enabled. Canonical Coptic integration tracking: [CopticScriptorium-TF #93](https://github.com/alexsosn/CopticScriptorium-TF/issues/93).
+GitHub Issues are enabled in this fork. This older backlog is a historical planning snapshot; current ticket status is in GitHub Issues. Canonical Coptic integration tracking: [CopticScriptorium-TF #93](https://github.com/alexsosn/CopticScriptorium-TF/issues/93).
 
 ## P0 — Validate legacy parent (merged PR #1)
 - [x] Audit real `tf/2022` using Text-Fabric 13.1.0 and publish a deterministic report: 27 books, 260 chapters, 7,927 verses, 137,554 words.

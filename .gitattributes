@@ -1,0 +1,8 @@
+# Text-Fabric 13.1.0 can download 2022 data from GitHub's repository ZIP
+# when no data release asset exists. Do NOT export-ignore tf/2022: the legacy
+# use("alexsosn/sblgnt", version="2022") API still relies on those files.
+# Exclude only the inherited unverified feature-production notebook from
+# source snapshots, while retaining it in normal Git checkouts.
+# Both the directory and its descendants are excluded to avoid empty entries.
+programs export-ignore
+programs/** export-ignore
