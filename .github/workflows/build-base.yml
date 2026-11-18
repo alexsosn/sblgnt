@@ -133,8 +133,8 @@ jobs:
           python -m scripts.query_unified_tf \
             --tf-dir "$RUNNER_TEMP/unified-native-tf" \
             --query-file "$RUNNER_TEMP/research-query.tfq" \
-            --limit 64 --report "$RUNNER_TEMP/research-query-main.json" > /dev/null
-          python -c 'import json,sys; r=json.load(open(sys.argv[1])); assert (r["matches_returned"],r["verses_returned"],r["truncated"]) == (25,1,False); assert r["verses"] == [{"book":"Mark","chapter":1,"verse":1,"matches":25}]' "$RUNNER_TEMP/research-query-main.json"
+            --limit 64 --include-nodes --report "$RUNNER_TEMP/research-query-main.json" > /dev/null
+          python -c 'import json,sys; r=json.load(open(sys.argv[1])); assert (r["matches_returned"],r["verses_returned"],r["truncated"]) == (25,1,False); assert r["verses"] == [{"book":"Mark","chapter":1,"verse":1,"matches":25}]; assert len(r["node_matches"]) == 25; assert all((m["book"],m["chapter"],m["verse"]) == ("Mark",1,1) and tuple(n["otype"] for n in m["nodes"]) == ("book","chapter","verse","morph_word","plain_token","xml_word","apparatus_note") and all(type(n["node"]) is int and n["node"] > 0 for n in m["nodes"]) for m in r["node_matches"])' "$RUNNER_TEMP/research-query-main.json"
       - name: Exercise one local unified advanced app A.search and A.pretty on all real source layers
         run: >-
           python -m scripts.smoke_local_tf_apps
@@ -184,7 +184,7 @@ jobs:
             PYTHONPATH= python -m scripts.query_unified_tf \
               --tf-dir "$RUNNER_TEMP/unified-from-extracted-zip" \
               --query-file "$RUNNER_TEMP/research-query.tfq" \
-              --limit 64 --report "$RUNNER_TEMP/research-query-extracted.json" > /dev/null
+              --limit 64 --include-nodes --report "$RUNNER_TEMP/research-query-extracted.json" > /dev/null
             cmp "$RUNNER_TEMP/research-query-main.json" "$RUNNER_TEMP/research-query-extracted.json"
             PYTHONPATH= python -m scripts.benchmark_local_tf --help > /dev/null
             PYTHONPATH= python -m scripts.profile_unified_load --help > /dev/null
