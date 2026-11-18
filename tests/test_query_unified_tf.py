@@ -200,6 +200,13 @@ class UnifiedSearchCliTests(unittest.TestCase):
         self.assertIn("25,1,False", workflow)
         self.assertEqual(workflow.count("--include-nodes"), 2)
         self.assertIn("node_matches", workflow)
+        # Exact source-derived node IDs are checked and compared privately in
+        # the runner, but the public audit artifact must contain counts only.
+        public_artifacts = workflow.split(
+            "      - name: Upload only source-free audit counts", 1
+        )[1]
+        self.assertNotIn("research-query-main.json", public_artifacts)
+        self.assertNotIn("research-query-extracted.json", public_artifacts)
         package = (root / "scripts/package_converter.py").read_text(encoding="utf-8")
         self.assertIn('"query_unified_tf.py"', package)
         documentation = (root / "docs/UNIFIED_NATIVE_TF.md").read_text(encoding="utf-8")
