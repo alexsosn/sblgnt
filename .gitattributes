@@ -1,6 +1,8 @@
-# Keep legacy third-party TF data in Git for historical audits and the 2022 app,
-# but exclude it from git archive (including GitHub-generated source snapshots).
-# Trailing /** is intentional: attribute patterns ending in / do not recurse.
+# Keep legacy data tracked for 2022 app/CI, but exclude from git archive
+# (including GitHub-generated source snapshots). The directory-level
+# attributes remove empty directory entries, while /** covers descendants.
+tf export-ignore
 tf/** export-ignore
-# The original 116-cell conversion notebook contains unverified legacy data.
+# The inherited conversion notebook contains unverified external enrichments.
+programs export-ignore
 programs/** export-ignore
