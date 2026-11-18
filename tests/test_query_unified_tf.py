@@ -125,6 +125,62 @@ class UnifiedSearchCliTests(unittest.TestCase):
                         query_unified(Path(temp), "verse", 10, features="morph_lemma ../secrets")
 
 
+    def test_opt_in_native_node_evidence_preserves_tuple_order_and_lookahead(self):
+        rows = [(1, 2, 3, 4, 5, 6, 7)] * 3
+        api = fake_api(rows)
+        default = summarize_matches(api, "verse", 2)
+        self.assertNotIn("node_matches", default)
+
+        result = summarize_matches(fake_api(rows), "verse", 2,
+                                   include_nodes=True)
+        self.assertEqual(result["verses"], [
+            {"book": "Mark", "chapter": 1, "verse": 1, "matches": 2}
+        ])
+        self.assertEqual(result["matches_returned"], 2)
+        self.assertTrue(result["truncated"])
+        self.assertEqual(len(result["node_matches"]), 2)
+        expected = [
+            {"node": node, "otype": kind}
+            for node, kind in (
+                (1, "book"), (2, "chapter"), (3, "verse"),
+                (4, "morph_word"), (5, "plain_token"),
+                (6, "xml_word"), (7, "apparatus_note")
+            )
+        ]
+        self.assertEqual(result["node_matches"], [
+            {"book": "Mark", "chapter": 1, "verse": 1,
+             "nodes": expected}
+        ] * 2)
+        encoded = json.dumps(result, ensure_ascii=False)
+        self.assertNotIn("ἀρχή", encoded)
+        self.assertNotIn("apparatus_note_text", encoded)
+
+    def test_native_match_node_type_must_be_real_and_include_nodes_boolean(self):
+        api = fake_api([(3, 9)])
+        with self.assertRaises(ValueError):
+            summarize_matches(api, "verse", 2, include_nodes=True)
+        for flag in (1, "yes", None):
+            with self.subTest(flag=flag), self.assertRaises(ValueError):
+                summarize_matches(fake_api([]), "verse", 2,
+                                  include_nodes=flag)
+
+    def test_opt_in_nodes_are_wired_through_source_pinned_fabric(self):
+        api = fake_api([(3, 4)])
+        fabric = Mock()
+        fabric.load.return_value = api
+        fake_tf = ModuleType("tf")
+        fake_fabric = ModuleType("tf.fabric")
+        fake_fabric.Fabric = Mock(return_value=fabric)
+        with patch("scripts.query_unified_tf.validate_unified_source_pins") as validate:
+            with patch.dict(sys.modules, {"tf": fake_tf, "tf.fabric": fake_fabric}):
+                with TemporaryDirectory() as temp:
+                    output = query_unified(Path(temp), "verse", 8,
+                                           include_nodes=True)
+                    validate.assert_called_once_with(Path(temp))
+        self.assertEqual(output["node_matches"][0]["nodes"],
+                         [{"node": 3, "otype": "verse"},
+                          {"node": 4, "otype": "morph_word"}])
+
     def test_real_corpus_and_extracted_archive_workflow_gates(self):
         root = Path(__file__).resolve().parents[1]
         workflow = (root / ".github/workflows/build-base.yml").read_text(encoding="utf-8")
@@ -134,10 +190,13 @@ class UnifiedSearchCliTests(unittest.TestCase):
         self.assertIn("research-query-main.json", workflow)
         self.assertIn("research-query-extracted.json", workflow)
         self.assertIn("25,1,False", workflow)
+        self.assertEqual(workflow.count("--include-nodes"), 2)
+        self.assertIn("node_matches", workflow)
         package = (root / "scripts/package_converter.py").read_text(encoding="utf-8")
         self.assertIn('"query_unified_tf.py"', package)
         documentation = (root / "docs/UNIFIED_NATIVE_TF.md").read_text(encoding="utf-8")
         self.assertIn("## Search from the terminal", documentation)
+        self.assertIn("--include-nodes", documentation)
 
 
 if __name__ == "__main__":
