@@ -159,6 +159,14 @@ class UnifiedSearchCliTests(unittest.TestCase):
         api = fake_api([(3, 9)])
         with self.assertRaises(ValueError):
             summarize_matches(api, "verse", 2, include_nodes=True)
+        # A compromised corpus could introduce a Latin-only otype containing
+        # content-like text: a regex is insufficient for source-free reports.
+        forged = fake_api([(3, 4)])
+        forged.F.otype.v.side_effect = lambda node: (
+            "verse" if node == 3 else "forgedNativeContent"
+        )
+        with self.assertRaises(ValueError):
+            summarize_matches(forged, "verse", 2, include_nodes=True)
         for flag in (1, "yes", None):
             with self.subTest(flag=flag), self.assertRaises(ValueError):
                 summarize_matches(fake_api([]), "verse", 2,
