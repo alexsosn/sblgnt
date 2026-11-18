@@ -232,6 +232,4 @@ jobs:
             ${{ runner.temp }}/local-tf-comparison.json
             ${{ runner.temp }}/unified-load-profiles.json
             ${{ runner.temp }}/unified-extracted-e2e.json
-            ${{ runner.temp }}/research-query-main.json
-            ${{ runner.temp }}/research-query-extracted.json
           if-no-files-found: ignore
