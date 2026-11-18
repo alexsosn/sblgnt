@@ -42,6 +42,28 @@ one verse** (Mark 1:1). The JSON contains `matches_returned: 25`,
 No Greek text, morphological fields or apparatus contents are included.
 An impossible John 7:53 `morph_word` match returns zero results.
 
+To inspect **which native TF nodes** participated in each individual
+match without loading Greek text or writing Python, add `--include-nodes`:
+
+```bash
+python -m scripts.query_unified_tf \
+  --tf-dir /tmp/sblgnt-unified \
+  --query-file query.tfq --limit 64 --include-nodes
+```
+
+This opt-in output preserves the default `verses` summary and adds
+`node_matches`, one record per returned tuple in TF Search template
+order. Each record has its canonical `book`/`chapter`/`verse` and
+an ordered `nodes` array of native integer `node` IDs and `otype`
+strings such as `morph_word`, `plain_token`, `xml_word` and
+`apparatus_note`. The lookahead tuple used to determine truncation
+is **never** included. These IDs are meaningful only in the **exact
+locally generated unified TF graph**, not stable identifiers across
+corpus rebuilds or editions. They are independent source-occurrence
+identities, **not** claimed word-to-word alignments. The JSON remains
+source-free. For actual Greek text or note content inspect the canonical
+verse locally with `scripts.inspect_verse`.
+
 The `--limit` bounds **match tuples**, not distinct verses (default 100,
 maximum 1000). `truncated: true` means at least one more match exists;
 the per-verse counts then cover **only returned matches**. Each matching
