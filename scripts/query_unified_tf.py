@@ -22,7 +22,7 @@ from scripts.local_tf_app import validate_unified_source_pins
 MAX_QUERY_BYTES = 65536
 MAX_RESULTS = 1000
 DEFAULT_FEATURES = ("book", "chapter", "verse", "morph_lemma")
-FEATURE_NAME = re.compile(r"[a-zA-Z_][a-zA-Z_0-9]*\\Z")
+FEATURE_NAME = re.compile(r"[a-zA-Z_][a-zA-Z_0-9]*\Z")
 # Exact node vocabulary emitted by build_unified_tf.py's native CV walker.
 # Explicitly prohibit arbitrary attacker-controlled otype values in an
 # otherwise source-free opt-in JSON report.
