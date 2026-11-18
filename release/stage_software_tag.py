@@ -22,8 +22,8 @@ from scripts.package_converter import (
 )
 
 TAG_PATTERN = re.compile(
-    r"converter-v(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\."
-    r"(?:0|[1-9][0-9]*)(?:-rc[1-9][0-9]*)?\\Z"
+    r"converter-v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\."
+    r"(?:0|[1-9][0-9]*)(?:-rc[1-9][0-9]*)?\Z"
 )
 # A pinned author date makes the isolated Git commit deterministic, independent
 # of the real GitHub release's future publication date.
@@ -81,10 +81,10 @@ def verify_tag_candidate(
     if parents != [sha]:
         raise ValueError("release tag must point to a single parentless commit")
     tree = _git(destination, "ls-tree", "-rz", tag)
-    entries = [entry for entry in tree.split(b"\\0") if entry]
+    entries = [entry for entry in tree.split(b"\0") if entry]
     inventory = {}
     for entry in entries:
-        prefix, sep, name = entry.partition(b"\\t")
+        prefix, sep, name = entry.partition(b"\t")
         if not sep:
             raise ValueError("invalid staged Git tree record")
         parts = prefix.split(b" ")
