@@ -35,6 +35,7 @@ REQUIRED_SCRIPTS = (
     "local_tf_app.py",
     "package_converter.py",
     "profile_unified_load.py",
+    "query_unified_tf.py",
     "release_rights.py",
     "smoke_local_tf_apps.py",
     "smoke_local_verses.py",
