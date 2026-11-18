@@ -27,7 +27,7 @@ def fake_api(rows=(), *, slot="unit"):
     api = SimpleNamespace(
         F=SimpleNamespace(otype=otype),
         T=SimpleNamespace(sectionFromNode=Mock(side_effect=section.get)),
-        S=SimpleNamespace(search=Mock(return_value=iter(rows))),
+        S=SimpleNamespace(search=Mock(return_value=(iter(rows), True, ""))),
     )
     return api
 
@@ -62,6 +62,14 @@ class UnifiedSearchCliTests(unittest.TestCase):
             with self.subTest(rows=rows):
                 with self.assertRaises(ValueError):
                     summarize_matches(fake_api(rows), "verse", 5)
+
+    def test_invalid_search_is_not_misreported_as_zero_hits(self):
+        api = fake_api([])
+        api.S.search.return_value = (iter(()), False, "bad TF Search syntax")
+        with self.assertRaisesRegex(ValueError, "template|Search"):
+            summarize_matches(api, "verse unexplained-invalid-op", 8)
+        api.S.search.assert_called_once()
+        self.assertIn("_msgCache", api.S.search.call_args.kwargs)
 
     def test_bad_query_limit_and_section_fail_closed(self):
         for template, limit in (("", 5), ("  ", 5), ("verse", 0),
