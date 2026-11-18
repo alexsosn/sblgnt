@@ -70,7 +70,7 @@ class UnifiedSearchCliTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     summarize_matches(fake_api([]), template, limit)
         api = fake_api([(3,)])
-        api.T.sectionFromNode.return_value = ("Mark", 0, 1)
+        api.T.sectionFromNode.side_effect = lambda _node: ("Mark", 0, 1)
         with self.assertRaises(ValueError):
             summarize_matches(api, "verse", 5)
 
