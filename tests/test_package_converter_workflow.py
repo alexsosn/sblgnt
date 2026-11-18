@@ -69,7 +69,9 @@ class SoftwareWorkflowTests(unittest.TestCase):
         )
         with tarfile.open(fileobj=BytesIO(tar_result.stdout), mode="r:") as archive:
             tar_names = {item.name for item in archive}
-        self.assertEqual(names, tar_names)
+        # Git ZIP stores directory entries with a trailing slash; Python's
+        # tarfile normalizes those directory member names without it.
+        self.assertEqual({name.rstrip("/") for name in names}, tar_names)
 
     def test_export_ignore_is_applied_to_actual_tracked_data(self):
         paths = (
