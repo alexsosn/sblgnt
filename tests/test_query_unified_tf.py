@@ -117,5 +117,20 @@ class UnifiedSearchCliTests(unittest.TestCase):
                         query_unified(Path(temp), "verse", 10, features="morph_lemma ../secrets")
 
 
+    def test_real_corpus_and_extracted_archive_workflow_gates(self):
+        root = Path(__file__).resolve().parents[1]
+        workflow = (root / ".github/workflows/build-base.yml").read_text(encoding="utf-8")
+        self.assertEqual(workflow.count("python -m scripts.query_unified_tf"), 2)
+        self.assertIn("unified-native-tf", workflow)
+        self.assertIn("unified-from-extracted-zip", workflow)
+        self.assertIn("research-query-main.json", workflow)
+        self.assertIn("research-query-extracted.json", workflow)
+        self.assertIn("25,1,False", workflow)
+        package = (root / "scripts/package_converter.py").read_text(encoding="utf-8")
+        self.assertIn('"query_unified_tf.py"', package)
+        documentation = (root / "docs/UNIFIED_NATIVE_TF.md").read_text(encoding="utf-8")
+        self.assertIn("## Search from the terminal", documentation)
+
+
 if __name__ == "__main__":
     unittest.main()
