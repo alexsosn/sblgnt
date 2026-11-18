@@ -52,7 +52,14 @@ The source checkout must match the **exact pinned commit**; the output
 directory must be new and outside the checkout. For the Faithlife plaintext,
 native XML-word and apparatus converters see the separate guides in this ZIP.
 
-To run a native cross-edition search from the terminal, write a UTF-8 Text-Fabric Search template containing a canonical `verse` node and execute `python -m scripts.query_unified_tf --tf-dir /tmp/sblgnt-unified --query-file query.tfq --limit 100`. It prints only verse references and counts (no Greek/source notes), and uses source-pinned local data. See [the unified search guide](UNIFIED_NATIVE_TF.md#search-from-the-terminal) for a reproducible query and feature-loading options.\n\nYou may load locally generated TF with the four standalone profiles or the fifth unified advanced-app profile
+To run a native cross-edition search from the terminal, write a UTF-8
+Text-Fabric Search template containing a canonical `verse` node and execute
+`python -m scripts.query_unified_tf --tf-dir /tmp/sblgnt-unified --query-file query.tfq --limit 100`.
+It prints only verse references and counts (no Greek or source notes) from
+source-pinned local data. See [the unified search guide](UNIFIED_NATIVE_TF.md#search-from-the-terminal)
+for a reproducible query and feature-loading options.
+
+You may load locally generated TF with the four standalone profiles or the fifth unified advanced-app profile
 (`scripts.local_tf_app`), query verses via `scripts.inspect_verse`,
 or validate local candidates against original source checkouts. None of
 those operations implies morphological or textual identity across editions.
