@@ -1,7 +1,8 @@
 """Run researcher-authored Text-Fabric Search on a pinned local unified corpus.
 
-Print only canonical verse references and match multiplicities. Search matches
-are same-verse co-occurrences, NEVER cross-edition aligned words. The local
+Print canonical verse references and match multiplicities, with optional native
+node IDs/types (no source text). Search matches are same-verse co-occurrences,
+NEVER cross-edition aligned words. IDs belong to the exact local TF graph. The local
 data remain private; this program does not download or publish Greek text.
 """
 from __future__ import annotations
@@ -43,20 +44,23 @@ def _loaded_features(features: str) -> str:
     return " ".join(dict.fromkeys((*DEFAULT_FEATURES, *names)))
 
 
-def _validated_request(template: str, limit: int) -> None:
+def _validated_request(template: str, limit: int, include_nodes: bool) -> None:
     if not isinstance(template, str) or not template.strip():
         raise ValueError("TF Search template must be nonempty")
     if type(limit) is not int or not (1 <= limit <= MAX_RESULTS):
         raise ValueError("limit must be between 1 and 1000")
+    if type(include_nodes) is not bool:
+        raise ValueError("include_nodes must be boolean")
 
 
-def summarize_matches(api, template: str, limit: int) -> dict:
+def summarize_matches(api, template: str, limit: int, *,
+                      include_nodes: bool = False) -> dict:
     """Materialize at most limit + 1 tuples to detect true truncation.
 
     Each returned tuple must include exactly one canonical verse node. The
     other nodes may come from distinct source layers, but are not aligned.
     """
-    _validated_request(template, limit)
+    _validated_request(template, limit, include_nodes)
     # TF 13.1 can return an EMPTY result set when template parsing failed.
     # Its private diagnostic cache exposes a boolean success status; checking
     # only the results would silently misreport invalid research as no hits.
@@ -72,6 +76,7 @@ def summarize_matches(api, template: str, limit: int) -> dict:
     iterator = iter(results)
     rows = tuple(islice(iterator, limit + 1))
     counts = Counter()
+    node_matches = [] if include_nodes else None
     for row in rows[:limit]:
         if not isinstance(row, (tuple, list)) or not row:
             raise ValueError("invalid native TF Search match tuple")
@@ -87,7 +92,19 @@ def summarize_matches(api, template: str, limit: int) -> dict:
                 or type(ref[2]) is not int or ref[2] < 1):
             raise ValueError("invalid native TF scripture verse section")
         counts[tuple(ref)] += 1
-    return {
+        if include_nodes:
+            evidence = []
+            for node in row:
+                kind = api.F.otype.v(node)
+                if (not isinstance(kind, str)
+                        or not FEATURE_NAME.fullmatch(kind)):
+                    raise ValueError("invalid native TF node type")
+                evidence.append({"node": node, "otype": kind})
+            node_matches.append({
+                "book": ref[0], "chapter": ref[1], "verse": ref[2],
+                "nodes": evidence,
+            })
+    report = {
         "status": "pass",
         "edition": "unified",
         "join_semantics": "same-verse-cooccurrence-only",
@@ -101,12 +118,15 @@ def summarize_matches(api, template: str, limit: int) -> dict:
             for (book, chapter, verse), count in counts.items()
         ],
     }
+    if include_nodes:
+        report["node_matches"] = node_matches
+    return report
 
 
 def query_unified(tf_dir: Path, template: str, limit: int = 100,
-                  *, features: str = "") -> dict:
+                  *, features: str = "", include_nodes: bool = False) -> dict:
     """Search the existing native TF graph without another index or corpus."""
-    _validated_request(template, limit)
+    _validated_request(template, limit, include_nodes)
     load_features = _loaded_features(features)
     validate_unified_source_pins(tf_dir)  # before any Text-Fabric load
     from tf.fabric import Fabric
@@ -120,7 +140,8 @@ def query_unified(tf_dir: Path, template: str, limit: int = 100,
             raise RuntimeError("native unified TF features failed to load")
         if api.F.otype.slotType != "unit":
             raise ValueError("unified TF requires the source-unit warp")
-        return summarize_matches(api, template, limit)
+        return summarize_matches(api, template, limit,
+                                 include_nodes=include_nodes)
 
 
 def main() -> int:
@@ -132,13 +153,16 @@ def main() -> int:
                         help="maximum returned search tuples, 1..1000")
     parser.add_argument("--features", default="",
                         help="additional scalar TF features, comma/space separated")
+    parser.add_argument("--include-nodes", action="store_true",
+                        help="include exact local TF node IDs/types for each match, without source text")
     parser.add_argument("--report", type=Path,
                         help="optional JSON verse-reference report")
     args = parser.parse_args()
     try:
         template = load_template(args.query_file)
         result = query_unified(args.tf_dir, template, args.limit,
-                               features=args.features)
+                               features=args.features,
+                               include_nodes=args.include_nodes)
         report = json.dumps(result, ensure_ascii=False, sort_keys=True) + "\n"
         if args.report:
             args.report.write_text(report, encoding="utf-8")
