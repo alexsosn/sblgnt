@@ -36,8 +36,11 @@ def run_smoke(mode: str, *, loader=None) -> dict:
                 options["checkout"] = LEGACY_COMMIT
             with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
                 if loader is None:
+                    stage = "github-extra"
+                    import github  # noqa: F401; TF's optional GitHub backend
                     from tf.app import use
                     loader = use
+                    stage = "remote-load"
                 app = loader(name, **options)
                 if app is None or not getattr(app, "api", None):
                     raise RuntimeError("remote app unavailable")
