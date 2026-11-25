@@ -112,9 +112,10 @@ operations is performed by automated CI.
 
 Before publication, and again immediately after any approved prerelease,
 run the `Legacy remote TF compatibility` workflow or, from a maintainer
-checkout with Text-Fabric 13.1.0 installed, run:
+checkout, install the GitHub extra and run:
 
 ```bash
+python -m pip install 'text-fabric[github]==13.1.0'
 python -m release.smoke_legacy_remote --mode default
 python -m release.smoke_legacy_remote --mode pinned
 ```
