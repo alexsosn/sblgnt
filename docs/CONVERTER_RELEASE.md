@@ -108,6 +108,35 @@ signature. The full sequence also requires independent inspection of the
 tag ref, verified ZIP SHA-256 and release notes. None of these publication
 operations is performed by automated CI.
 
+### Remote compatibility smoke (maintainer checkout)
+
+Before publication, and again immediately after any approved prerelease,
+run the `Legacy remote TF compatibility` workflow or, from a maintainer
+checkout with Text-Fabric 13.1.0 installed, run:
+
+```bash
+python -m release.smoke_legacy_remote --mode default
+python -m release.smoke_legacy_remote --mode pinned
+```
+
+Each invocation downloads the app and data into a separate temporary cache.
+The default mode exercises the existing researcher call, without a checkout
+specifier; the pinned mode explicitly pins **both** the app and the data to
+the historical-compatible commit `448be243aef64d3ee4465632ab881877be76266a`.
+Both modes check the legacy app config, native node counts, rich legacy
+features, Mark 1:1 section lookup, and advanced rendering. The pinned mode
+also verifies both cache checkout markers. Output contains counts and
+status only, not rendered Greek. An optional GitHub credential may be
+provided through the Text-Fabric `GHPERS` environment variable to avoid
+anonymous API limits. The maintainer smoke is not in the end-user ZIP.
+
+A green prepublication run is a baseline, **not** evidence that the future
+release is compatible. The default smoke must pass again after publication;
+a successful pinned fallback alone does not clear #60. The software-only
+snapshot contains `app/profiles/` but lacks the historical `app/config.yaml`,
+so checking that a remote corpus loads without checking the legacy app
+configuration is insufficient.
+
 The mandatory package workflow performs this staging dry-run on the real
 verified converter ZIP, inspects an independently generated Git source
 archive, and runs CLI help from the unpacked tag snapshot. It does **not**
