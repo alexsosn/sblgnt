@@ -33,6 +33,46 @@ The loader checks the **full** pinned SHA and converter identity declared in loc
 
 MorphGNT does **not** contain morphology for John 7:53–8:11, while Faithlife plaintext/XML do contain the Greek text. The apparatus app only has sections with real notes; absence of an apparatus node is **not** evidence that the base text verse is omitted. These apps provide no cross-edition word identity or inferred reading equivalence.
 
+## Lemma-frequency lists
+
+For an exact token-frequency inventory of the pinned MorphGNT edition,
+use Text-Fabric's native feature API in Python or Jupyter:
+
+```python
+from pathlib import Path
+from scripts.local_tf_app import load_local_app
+
+A = load_local_app(Path("/tmp/sblgnt-generated"), "morphgnt")
+frequencies = A.api.F.lemma.freqList(nodeTypes={"word"})
+print(frequencies[:20])  # (lemma, token_count) pairs, most frequent first
+```
+
+If you are already working with the unified app, use this **alternative**
+in that notebook rather than loading both apps just to count lemmas:
+
+```python
+# U is the existing unified app from load_local_unified_app(...)
+unified_frequencies = U.api.F.morph_lemma.freqList(nodeTypes={"morph_word"})
+```
+
+The counts are for exact source lemma strings, ordered by descending
+frequency, with ties sorted by Python's Unicode string order. Spelling,
+accent and Unicode normalization differences are not merged. This is a
+MorphGNT token count, not a count of verse references, dictionary senses,
+or occurrences in the Faithlife-only verses of John 7:53–8:11.
+
+The standalone base-field audit checks the native list against an
+independent count from all original pinned MorphGNT source rows. It emits
+only numeric totals and pass/fail status. These lists do not depend on
+the historical unverified `lemma_freq` strings or BibleOL dictionary
+data, and require no extra generated TF feature. The unified example
+uses its own source-qualified lemma feature; the corpus-wide standalone
+frequency audit does not independently exercise this second native call.
+
+For memory-constrained notebooks, use the standalone MorphGNT app if no
+cross-source query is needed. The full unified app loads a substantially
+larger native graph (see [memory measurements](UNIFIED_NATIVE_TF.md#profiling-memory-cost-of-the-unified-loader)).
+
 ## CI / reproducibility
 
 The required pinned full-source workflow executes `python -m unittest discover -s tests -v`, all 27-book source and native TF audits, then `python -m scripts.smoke_local_tf_apps` on all four *real* generated corpus directories. That smoke wraps each actual native API in the edition-specific advanced app and runs `A.pretty(..., _asString=True)` on real Mark and John sections, verifying source-dependent verse coverage while discarding Greek HTML and Text-Fabric stdout/stderr. Only nontextual pass counts appear in the CI output.

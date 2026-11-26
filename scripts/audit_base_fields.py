@@ -12,13 +12,13 @@ from pathlib import Path
 
 from scripts.build_base_tf import SourceWord, iter_source_words
 from scripts.compare_morphgnt import MORPHGNT_COMMIT, verify_source_checkout
-from scripts.compare_tokens import LEGACY_COMMIT
+from scripts.compare_tokens import LEGACY_COMMIT, source_rows
 
 MAX_EXAMPLES = 30
 SOURCE_FIELDS = ("text", "word", "normalized_word", "lemma", "pos", "parsing", "morphology")
 
 
-def tf_source_rows(tf_dir: Path):
+def load_base_api(tf_dir: Path):
     from tf.fabric import Fabric
 
     api = Fabric(locations=[str(tf_dir.resolve())], silent="deep").load(
@@ -27,6 +27,12 @@ def tf_source_rows(tf_dir: Path):
     )
     if not api:
         raise RuntimeError(f"unable to load generated base TF from {tf_dir}")
+    return api
+
+
+def tf_source_rows(tf_dir: Path, *, api=None):
+    if api is None:
+        api = load_base_api(tf_dir)
     for verse_node in api.F.otype.s("verse"):
         book, chapter, verse = api.T.sectionFromNode(verse_node)
         for word_node in api.L.d(verse_node, otype="word"):
@@ -77,6 +83,21 @@ def compare_source_fields(source, generated) -> dict:
     }
 
 
+def compare_lemma_frequencies(source, native) -> dict:
+    """Compare native exact-lemma counts and ordering; never expose keys."""
+    counts = Counter(row.lemma for row in source)
+    expected = tuple(sorted(counts.items(), key=lambda item: (-item[1], item[0])))
+    actual = tuple(native)
+    return {
+        "status": "pass" if actual == expected else "fail",
+        "source_tokens": sum(counts.values()),
+        "source_lemma_types": len(expected),
+        "native_tokens": sum(count for _, count in actual),
+        "native_lemma_types": len(actual),
+        "scope": "Exact source lemma strings; no normalization or external lexicon",
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-dir", type=Path, required=True)
@@ -85,7 +106,14 @@ def main() -> int:
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()
     verify_source_checkout(args.source_dir, expected_commit=args.source_commit)
-    report = compare_source_fields(iter_source_words(args.source_dir), tf_source_rows(args.tf_dir))
+    api = load_base_api(args.tf_dir)
+    report = compare_source_fields(iter_source_words(args.source_dir),
+                                   tf_source_rows(args.tf_dir, api=api))
+    report["lemma_frequencies"] = compare_lemma_frequencies(
+        source_rows(args.source_dir), api.F.lemma.freqList(nodeTypes={"word"}),
+    )
+    if report["lemma_frequencies"]["status"] != "pass":
+        report["status"] = "fail"
     report["source_revision"] = f"morphgnt/sblgnt@{args.source_commit}"
     serialized = json.dumps(report, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
     print(serialized, end="")

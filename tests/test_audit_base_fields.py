@@ -2,7 +2,7 @@
 import json
 import unittest
 
-from scripts.audit_base_fields import compare_source_fields
+from scripts.audit_base_fields import compare_source_fields, compare_lemma_frequencies
 from scripts.build_base_tf import SourceWord
 
 
@@ -51,6 +51,30 @@ class FieldAuditTests(unittest.TestCase):
         self.assertNotIn("λόγος", output)
         self.assertNotIn("ἄλλος", output)
         self.assertEqual(report["examples"][0]["ordinal"], 1)
+
+
+    def test_native_lemma_frequency_exact_counts_and_tie_order(self):
+        # Distinct spellings, including canonically equivalent Unicode strings,
+        # remain distinct source keys. Ties use Python's exact string order.
+        originals = [row(lemma="β"), row(lemma="α"), row(lemma="β"),
+                     row(lemma="ά"), row(lemma="α\u0301")]
+        expected = (("β", 2), ("ά", 1), ("α", 1), ("α\u0301", 1))
+        report = compare_lemma_frequencies(originals, expected)
+        self.assertEqual(report["status"], "pass")
+        self.assertEqual(report["source_tokens"], 5)
+        self.assertEqual(report["source_lemma_types"], 4)
+
+    def test_native_lemma_frequency_rejects_wrong_keys_counts_and_order(self):
+        originals = [row(lemma="β"), row(lemma="α"), row(lemma="β")]
+        for actual in ((("β", 1), ("α", 2)),
+                       (("β", 2), ("γ", 1)),
+                       (("α", 1), ("β", 2)),
+                       (("β", 2), ("α", 1), ("α", 1))):
+            with self.subTest(actual=actual):
+                report = compare_lemma_frequencies(originals, actual)
+                self.assertEqual(report["status"], "fail")
+                self.assertNotIn("β", json.dumps(report, ensure_ascii=False))
+                self.assertNotIn("γ", json.dumps(report, ensure_ascii=False))
 
 
 if __name__ == "__main__":
