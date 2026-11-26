@@ -17,6 +17,7 @@ from scripts.build_faithlife_text_tf import iter_faithlife_verses
 from scripts.compare_faithlife_refs import BOOK_FILES
 from scripts.faithlife_xml import parse_xml_book
 from scripts.faithlife_apparatus import parse_apparatus_book
+from scripts.source_morphology import MORPH_FEATURES, decode_source_morphology
 
 
 def assert_only_publication_slots_unsectioned(api):
@@ -68,12 +69,38 @@ def assert_no_volatile_headers(tf_dir: Path):
     return count
 
 
+def assert_morph_word_fields(api, source, node):
+    """Check all raw fields and sparse decoded grammar on a native word node."""
+    expected = {
+        "morph_text": source.text,
+        "morph_word_form": source.word,
+        "morph_normalized_word": source.normalized_word,
+        "morph_lemma": source.lemma,
+        "morph_morphology": source.morphology,
+        "morph_source_pos": source.pos,
+        "morph_source_parsing": source.parsing,
+        "morph_ordinal": source.ordinal,
+    }
+    decoded = decode_source_morphology(source.pos, source.parsing)
+    expected.update({name: decoded.get(name) for name in MORPH_FEATURES})
+    for name, value in expected.items():
+        if getattr(api.F, name).v(node) != value:
+            ref = (source.book, source.chapter, source.verse, source.ordinal)
+            raise ValueError(f"MorphGNT {name} mismatch at {ref}")
+
+
+def assert_morph_presence(api, node, ref, source_refs):
+    if api.F.morph_present.v(node) != int(ref in source_refs):
+        raise ValueError(f"MorphGNT morph_present mismatch at {ref}")
+
+
 def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
     canonical_feature_count = assert_no_volatile_headers(tf_dir)
     from tf.fabric import Fabric
-    api = Fabric(locations=[str(tf_dir.resolve())], silent="deep").load("""
-        book chapter verse unit_layer faithlife_title apparatus_book_title xml_book_id xml_paragraph_total\n        morph_text morph_lemma morph_morphology
+    api = Fabric(locations=[str(tf_dir.resolve())], silent="deep").load(f"""
+        book chapter verse unit_layer faithlife_title apparatus_book_title xml_book_id xml_paragraph_total\n        morph_text morph_word_form morph_normalized_word morph_lemma morph_morphology
         morph_source_pos morph_source_parsing morph_ordinal morph_present
+        {' '.join(MORPH_FEATURES)}
         faithlife_text faithlife_trailing_spaces
         plain_surface plain_start plain_end plain_ordinal
         xml_word_text xml_word_ordinal xml_paragraph_ordinal
@@ -89,23 +116,19 @@ def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
     counts["canonical_tf_feature_files"] = canonical_feature_count
     # Independently iterate actual source lines, don't trust converter's
     # intermediate records or its internal counters.
+    morph_refs = set()
     for ref, stream in groupby(iter_source_words(morph_source),
                                lambda r: (r.book, r.chapter, r.verse)):
         node = api.T.nodeFromSection(ref)
         if node is None:
             raise ValueError(f"MorphGNT source verse missing from unified TF: {ref}")
+        morph_refs.add(ref)
         original = tuple(stream)
         native = api.L.d(node, otype="morph_word")
         if len(original) != len(native):
             raise ValueError(f"MorphGNT word count mismatch at {ref}")
         for src, target in zip(original, native):
-            fields = (("morph_text", src.text), ("morph_lemma", src.lemma),
-                      ("morph_morphology", src.morphology),
-                      ("morph_source_pos", src.pos),
-                      ("morph_source_parsing", src.parsing),
-                      ("morph_ordinal", src.ordinal))
-            if any(getattr(api.F, field).v(target) != value for field, value in fields):
-                raise ValueError(f"MorphGNT source field mismatch at {ref}")
+            assert_morph_word_fields(api, src, target)
             counts["morph_words"] += 1
         counts["morph_verses"] += 1
 
@@ -114,6 +137,8 @@ def audit_unified(tf_dir: Path, morph_source: Path, faith_source: Path):
         node = api.T.nodeFromSection(row.ref)
         if node is None or api.F.faithlife_text.v(node) != row.text:
             raise ValueError(f"Faithlife plaintext verse mismatch at {row.ref}")
+        assert_morph_presence(api, node, row.ref, morph_refs)
+        counts["morph_presence_flags"] += 1
         if api.F.faithlife_trailing_spaces.v(node) != row.trailing_spaces:
             raise ValueError(f"trailing source padding mismatch at {row.ref}")
         words = tuple(re.finditer(r"[^ ]+", row.text))
