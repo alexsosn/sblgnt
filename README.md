@@ -120,7 +120,13 @@ Text-Fabric has proven to be an excellent linguistic research tool as it can use
 2.	Since the BibleOL uses the SBLGNT version, we now offer with the TF SBLGNT app the possibility to create vocab lists and identify text material for BibleOL based exercises.
 
 # How to get started?
-Run in a jupyter notebook the following command:
+For the historical remote 2022 app, install Text-Fabric with its optional GitHub backend:
+
+```bash
+python -m pip install 'text-fabric[github]==13.1.0'
+```
+
+Then run in a Jupyter notebook:
 ```python
 from tf.fabric import Fabric
 from tf.app import use
