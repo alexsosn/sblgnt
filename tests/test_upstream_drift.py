@@ -90,6 +90,10 @@ class UpstreamDriftTests(unittest.TestCase):
                          for path in expected}
         allpaths.add("data/sblgnt/xml/sblgnt.xml")
         validate_faithlife_inventory(allpaths)
+        # The unified converter consumes this publication XML even though it
+        # is not one of the 27 scripture books in the XML family.
+        with self.assertRaisesRegex(ValueError, "publication"):
+            validate_faithlife_inventory(allpaths - {"data/sblgnt/xml/sblgnt.xml"})
         allpaths.remove("data/sblgntapp/xml/Rev.xml")
         with self.assertRaisesRegex(ValueError, "inventory"):
             validate_faithlife_inventory(allpaths)

@@ -86,7 +86,10 @@ def validate_faithlife_inventory(paths) -> None:
         expected = {prefix + stem + suffix for stem in BOOK_FILES.values()}
         matches = {path for path in found if path.startswith(prefix)}
         if family == "xml_presentation":
-            matches.discard("data/sblgnt/xml/sblgnt.xml")
+            publication = "data/sblgnt/xml/sblgnt.xml"
+            if publication not in matches:
+                raise ValueError("Faithlife publication XML missing from inventory")
+            matches.remove(publication)
         if matches != expected:
             raise ValueError(
                 f"Faithlife {family} inventory drift: "
