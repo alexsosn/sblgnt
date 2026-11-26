@@ -40,13 +40,18 @@ use Text-Fabric's native feature API in Python or Jupyter:
 
 ```python
 from pathlib import Path
-from scripts.local_tf_app import load_local_app, load_local_unified_app
+from scripts.local_tf_app import load_local_app
 
 A = load_local_app(Path("/tmp/sblgnt-generated"), "morphgnt")
 frequencies = A.api.F.lemma.freqList(nodeTypes={"word"})
 print(frequencies[:20])  # (lemma, token_count) pairs, most frequent first
+```
 
-U = load_local_unified_app(Path("/tmp/sblgnt-unified"))
+If you are already working with the unified app, use this **alternative**
+in that notebook rather than loading both apps just to count lemmas:
+
+```python
+# U is the existing unified app from load_local_unified_app(...)
 unified_frequencies = U.api.F.morph_lemma.freqList(nodeTypes={"morph_word"})
 ```
 
